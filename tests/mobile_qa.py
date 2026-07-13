@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 from pathlib import Path
 
 try:
@@ -19,9 +20,21 @@ VIEWPORTS = [(667, 375), (844, 390), (896, 414), (932, 430)]
 
 
 async def run() -> None:
-    report = {"version": "1.1.0-foundation.1", "status": "PASS", "viewports": [], "errors": []}
+    configured_browser = os.environ.get("PLAYWRIGHT_CHROMIUM_EXECUTABLE")
+    system_browser = Path("/usr/bin/chromium")
+    browser_executable = configured_browser or (str(system_browser) if system_browser.exists() else None)
+    report = {
+        "version": "1.1.0-foundation.1",
+        "status": "PASS",
+        "browserExecutable": browser_executable or "playwright-managed",
+        "viewports": [],
+        "errors": [],
+    }
     async with async_playwright() as playwright:
-        browser = await playwright.chromium.launch(headless=True, executable_path="/usr/bin/chromium", args=["--no-sandbox"])
+        launch_options: dict[str, object] = {"headless": True, "args": ["--no-sandbox"]}
+        if browser_executable:
+            launch_options["executable_path"] = browser_executable
+        browser = await playwright.chromium.launch(**launch_options)
         standalone = DIST / "standalone.html"
         if not standalone.exists():
             raise RuntimeError("dist/standalone.html absent : exécuter npm run build:standalone")
