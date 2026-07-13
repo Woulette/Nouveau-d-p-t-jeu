@@ -1,0 +1,160 @@
+  function setDirection(entity, from, to) {
+    const dx = to.x - from.x, dy = to.y - from.y;
+    if (Math.abs(dx) > Math.abs(dy)) entity.direction = dx < 0 ? 'left' : 'right';
+    else if (dy !== 0) entity.direction = dy < 0 ? 'up' : 'down';
+  }
+
+  function beginStep(entity) {
+    if (entity.to || !entity.path.length) return;
+    entity.from = { x: entity.x, y: entity.y };
+    entity.to = entity.path.shift();
+    entity.step = 0;
+    setDirection(entity, entity.from, entity.to);
+    entity.state = 'walk';
+    entity.stateTime = 0;
+  }
+
+  function movementDuration(entity, isPlayer) {
+    const speed = isPlayer ? playerSpeed() : MONSTER_DEFS[entity.type].speed;
+    return 0.34 * (100 / speed);
+  }
+
+  function updateMovement(entity, dt, isPlayer) {
+    beginStep(entity);
+    if (!entity.to) return false;
+    if (!isPlayer && game.player && entity.to.x === game.player.x && entity.to.y === game.player.y) {
+      entity.path = []; entity.to = null; entity.from = null; entity.step = 0;
+      return false;
+    }
+    entity.step += dt / movementDuration(entity, isPlayer);
+    const t = clamp(entity.step, 0, 1);
+    const smooth = t * t * (3 - 2 * t);
+    entity.px = lerp(entity.from.x, entity.to.x, smooth);
+    entity.py = lerp(entity.from.y, entity.to.y, smooth);
+    if (t >= 1) {
+      entity.x = entity.to.x; entity.y = entity.to.y; entity.px = entity.x; entity.py = entity.y;
+      entity.to = null; entity.from = null; entity.step = 0;
+      beginStep(entity);
+    }
+    return true;
+  }
+
+  function stopMovement(entity) {
+    entity.path = [];
+    if (!entity.to) return;
+    if (entity.step >= .5) {
+      entity.x = entity.to.x; entity.y = entity.to.y;
+    } else if (entity.from) {
+      entity.x = entity.from.x; entity.y = entity.from.y;
+    }
+    entity.px = entity.x; entity.py = entity.y; entity.to = null; entity.from = null; entity.step = 0;
+  }
+
+  function setPlayerPath(destination, range = 0, targetId = null) {
+    if (game.player.dying) return;
+    game.selectedMonsterId = targetId;
+    const path = findPath(game.player, destination, range, { ignoreMonsterId: targetId });
+    if (!path.length && manhattan(game.player, destination) > range) {
+      toast('Ce passage est bloqué');
+      return;
+    }
+    game.player.path = path;
+    game.player.pendingAttack = null;
+    if (!path.length) game.player.state = 'idle';
+    syncUi(true);
+  }
+
+  function selectedMonster() { return game.monsters.find(monster => monster.id === game.selectedMonsterId && !monster.dead) || null; }
+
+  function faceToward(entity, target) { setDirection(entity, entity, target); }
+
+  function updatePlayer(dt) {
+    const player = game.player;
+    if (player.dying) {
+      player.stateTime += dt;
+      player.respawnTimer -= dt;
+      if (player.respawnTimer <= 0) respawnPlayer();
+      return;
+    }
+    player.attackCooldown = Math.max(0, player.attackCooldown - dt);
+    player.hitLock = Math.max(0, player.hitLock - dt);
+    const previousMp = Math.floor(player.mp);
+    player.mp = Math.min(maxMp(), player.mp + dt * 1.7);
+    if (Math.floor(player.mp) !== previousMp) game.uiDirty = true;
+
+    if (player.pendingAttack) {
+      player.stateTime += dt;
+      const attack = player.pendingAttack;
+      if (!attack.fired && player.stateTime >= attack.hitAt) {
+        attack.fired = true;
+        executePlayerHit(attack);
+      }
+      if (player.stateTime >= attack.duration) {
+        player.pendingAttack = null;
+        player.state = 'idle';
+        player.stateTime = 0;
+      }
+      return;
+    }
+
+    const moving = updateMovement(player, dt, true);
+    if (moving) {
+      player.stateTime += dt;
+      return;
+    }
+
+    if (player.interaction === 'mentor' && distance(player, game.map.mentor) <= 1.45) {
+      player.interaction = null;
+      if (game.state.player.className === 'Aventurier' && game.state.player.classLevel >= 20 && !game.state.classChoiceLocked) openModal(ui.classModal);
+    }
+
+    const target = selectedMonster();
+    if (target) {
+      const weapon = WEAPONS[game.state.player.weapon];
+      const d = distance(player, target);
+      if (d > weapon.range || !lineOfSight(player, target)) {
+        if (!player.path.length && !player.to) {
+          player.path = findPath(player, target, Math.max(1, Math.floor(weapon.range)), { ignoreMonsterId: target.id });
+          if (!player.path.length) {
+            toast('La cible est inaccessible');
+            game.selectedMonsterId = null;
+          }
+        }
+      } else if (player.attackCooldown <= 0) {
+        startPlayerAttack(target, weapon);
+      } else {
+        player.state = 'idle'; player.stateTime += dt;
+      }
+    } else {
+      player.state = player.hitLock > 0 ? 'hit' : 'idle';
+      player.stateTime += dt;
+    }
+  }
+
+  function startPlayerAttack(target, weapon) {
+    if (game.player.mp < weapon.mana) {
+      toast('Pas assez de PM');
+      game.player.attackCooldown = .5;
+      return;
+    }
+    stopMovement(game.player);
+    faceToward(game.player, target);
+    game.player.mp -= weapon.mana;
+    game.player.state = weapon.state;
+    game.player.stateTime = 0;
+    game.player.attackCooldown = weapon.cooldown;
+    game.player.pendingAttack = { targetId: target.id, weapon: game.state.player.weapon, hitAt: weapon.hitAt, duration: weapon.cooldown * .76, fired: false };
+    game.uiDirty = true;
+  }
+
+  function executePlayerHit(attack) {
+    const monster = game.monsters.find(m => m.id === attack.targetId && !m.dead);
+    if (!monster) return;
+    const weapon = WEAPONS[attack.weapon];
+    if (distance(game.player, monster) > weapon.range + .55 || !lineOfSight(game.player, monster)) return;
+    const mastery = effectiveMastery(weapon.mastery);
+    const variance = randomInt(-1, 2);
+    const damage = Math.max(1, Math.floor(weapon.baseDamage + mastery * .72 + variance));
+    if (weapon.projectile) {
+      game.projectiles.push({ type: weapon.projectile, x: game.player.px, y: game.player.py - .15, targetId: monster.id, damage, mastery: weapon.mastery, speed: weapon.projectile === 'magic' ? 9 : 7.5, life: 2 });
+    } else {

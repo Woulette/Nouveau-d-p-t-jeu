@@ -1,0 +1,19 @@
+{
+  "version": "1.1.0-foundation.1",
+  "status": "PASS",
+  "sourceOfTruth": "scripts/generate_assets.py",
+  "runtimeFormat": "PNG atlases generated deterministically at build time",
+  "files": [
+    {"path":"assets/hero.png","width":1184,"height":192,"mode":"RGBA","bytes":20981,"sha256":"07bafdbf2bc61d0e367427a3558ec6ced5491eddf9f79e4c6337e1fdb1022a73"},
+    {"path":"assets/monsters.png","width":1104,"height":240,"mode":"RGBA","bytes":10401,"sha256":"8a8a20d3e9bcf1b784d4114f8f685b8c11b9340b4946776fc2a014f9dadc5e00"},
+    {"path":"assets/ui.png","width":576,"height":48,"mode":"RGBA","bytes":3302,"sha256":"a81ed16bd7617c5c0b188253fa04bb0a8ce1ccf13d98ac0dbc0c58531819f13e"},
+    {"path":"assets/effects.png","width":1536,"height":48,"mode":"RGBA","bytes":3831,"sha256":"afab2907b0f2f1550aef213f3ce6ed8462be06a90621a1e8682d5d340d0039ef"},
+    {"path":"assets/portrait.png","width":96,"height":96,"mode":"RGBA","bytes":699,"sha256":"47586118ad8b10b61ac0b3f2811199375c43c954df6d7ee866a20a86f7be02e1"},
+    {"path":"assets/map-base.png","width":2048,"height":1280,"mode":"RGBA","bytes":318459,"sha256":"ec284371f74d7f888411cfdc7b3c056ed3d62fe2a7294125252f494e43817d06"},
+    {"path":"assets/map-overlay.png","width":2048,"height":1280,"mode":"RGBA","bytes":100637,"sha256":"e9646f8c8eb7a957512a9101c874dc06bb6075fed7303e3520863a3120f37f64"},
+    {"path":"assets/atlas.json","bytes":587,"sha256":"0d9e9869371232e09f6d2e1f9861d3d79c04d6235894f902bfd407d88dbb977b"},
+    {"path":"assets/map-data.json","bytes":4103,"sha256":"379a22bb9baa36da1a5f00ce76217f145ff028415063352501e883f8e30facbc"}
+  ],
+  "metrics": {"heroAnimationFrames":148,"monsterAnimationFrames":115,"uiIcons":12,"effectFrames":32},
+  "errors": []
+}

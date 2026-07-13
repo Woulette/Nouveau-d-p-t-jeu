@@ -1,56 +1,55 @@
-# Cahier des charges — Chroniques de Solenne
+# Cahier des charges validé — Chroniques de Solenne
 
 ## Vision
 
-MMORPG mobile 2D en pixel art, en vue du dessus, avec une ambiance fantasy chaleureuse et une lisibilité adaptée au téléphone en mode paysage. L’univers, les cartes, les personnages, les monstres et l’interface sont originaux.
+MMORPG mobile 2D en pixel art, inspiré dans son rythme et sa lisibilité par les MMORPG mobiles sur grille, mais avec un univers, des cartes, des personnages, des monstres et une interface entièrement originaux.
 
-## Personnage de départ
+## Plateforme et commandes
 
-- Niveau général 1.
-- Classe Aventurier, rang de classe 1.
-- Vitesse de base 100.
-- Bâton pour le corps à corps.
-- Fronde pour la distance.
-- Orbe pour les boules magiques.
+- Téléphone en mode paysage.
+- Aucun joystick.
+- Monde sur grille.
+- Toucher une case calcule un chemin et déplace le personnage case par case.
+- Toucher un monstre le cible, rapproche automatiquement le joueur à la bonne portée puis lance les attaques automatiques.
 
-Chaque niveau général ajoute 1 point de vitesse : `vitesse = 99 + niveau général`.
+## Progressions
 
-## Déplacement
+- Niveau général 1 au départ ; XP attribuée à la mort des monstres.
+- Aventurier rang 1 au départ ; XP de classe attribuée à la mort des monstres.
+- Vitesse de base 100 ; chaque niveau général gagné ajoute 1.
+- Corps à corps, distance et magie gagnent de l’XP à chaque attaque valide.
+- Défense gagne de l’XP à chaque attaque réellement reçue.
+- Les maîtrises ne sont jamais partagées dans un groupe et sont conservées lors d’une évolution de classe.
 
-Le monde est une grille. Le joueur touche une case, le jeu recherche un chemin autour des obstacles et le personnage avance logiquement case par case. L’animation visuelle reste fluide. Il n’y a pas de joystick et le déplacement n’est pas analogique.
+## Équipement initial
 
-## Combat
+- Bâton : corps à corps.
+- Fronde : attaque à distance.
+- Orbe : boule magique consommant des PM.
 
-Toucher un monstre le sélectionne. Le personnage avance automatiquement jusqu’à la portée de l’arme, s’arrête, attaque, puis suit sa cible si nécessaire.
+## Classes
 
-- Bâton : portée courte, XP de corps à corps à chaque coup valide.
-- Fronde : projectile visible, XP de distance à chaque coup valide.
-- Orbe : projectile magique, consommation de PM, XP de magie à chaque coup valide.
-- Attaque reçue : XP de défense.
+Au rang Aventurier 20, interaction avec le cristal des mentors :
 
-L’XP des maîtrises est personnelle et n’est jamais partagée. L’XP générale et l’XP de classe sont accordées à la mort du monstre et seront partageables en groupe entre les membres proches ayant participé.
+- Épéiste rang 1 ;
+- Archer rang 1 ;
+- Mage rang 1.
 
-## Progression de classe
-
-Au rang Aventurier 20, le joueur choisit définitivement auprès d’un mentor : Épéiste, Archer ou Mage. La nouvelle classe recommence au rang 1. Le niveau général, les maîtrises, l’inventaire et les équipements restent conservés. Plus tard, les classes pourront évoluer de nouveau, par exemple Mage vers Nécromancien.
+Le choix est permanent. Le niveau général, les maîtrises, l’inventaire et l’équipement sont conservés. Une évolution avancée sera proposée plus tard, par exemple Mage vers Nécromancien.
 
 ## Monstres et récompenses
 
-Les monstres peuvent donner : XP générale, XP de classe, or, consommables, matériaux et parfois équipement. La première zone contient gelée, rat, sanglier, loup et feu follet.
+Les monstres accordent XP générale, XP de classe et or à leur mort. Ils peuvent aussi donner des consommables, des matériaux et parfois un équipement. En groupe, seule l’XP de mort sera partagée ; les maîtrises resteront personnelles.
 
 ## Mort
 
-Le personnage réapparaît au village, récupère ses PV et PM et ne perd ni niveau, ni maîtrise, ni objet dans la première version.
+Le personnage réapparaît au village enregistré, sans perte de niveau, de maîtrise ou d’objet dans la première version.
 
 ## Direction artistique verrouillée
 
-- Carte forestière riche en herbe, chemins, fleurs, buissons, rochers, arbres, clôtures, lampadaires, puits et maison.
-- Personnage et monstres animés.
-- Interface sombre avec détails dorés.
-- Aucun emoji utilisé comme asset de jeu.
-- Aucun écran vert vide, rectangle simpliste ou placeholder dans la branche de production.
-- Une correction technique ne doit jamais supprimer les animations ou réduire la qualité visuelle.
-
-## Architecture cible MMO
-
-Le prototype actuel est local et sauvegardé dans le navigateur. La suite utilisera un serveur autoritaire pour le déplacement, le combat, les récompenses et la synchronisation des joueurs. Le client ne pourra jamais s’attribuer directement de l’XP, de l’or ou des dégâts.
+- Pixel art fantasy chaleureux et détaillé.
+- Tuiles variées, fleurs, herbes, arbres, buissons, rochers, chemins, lampadaires, barrières et bâtiments.
+- Interface sombre avec contours dorés.
+- Atlas PNG réels et animations visibles.
+- Aucun emoji utilisé comme asset final.
+- Aucun écran vert vide, rectangle de remplacement ou suppression d’animation ne peut être publié sur `main`.

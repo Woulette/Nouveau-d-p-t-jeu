@@ -1,0 +1,128 @@
+        ell(d,(ox+2+lunge,oy+27,ox+15+lunge,oy+37),hi,PAL["outline"])
+        rect(d,(ox+5+lunge,oy+31,ox+7+lunge,oy+33),PAL["outline"]); rect(d,(ox+11+lunge,oy+31,ox+13+lunge,oy+33),PAL["outline"])
+        rect(d,(ox+11+lunge,oy+23,ox+14+lunge,oy+26),PAL["outline"]); rect(d,(ox+21+lunge,oy+23,ox+24+lunge,oy+26),PAL["outline"])
+        if state=="attack": poly(d,[(ox+5+lunge,oy+34),(ox-1+lunge,oy+39),(ox+7+lunge,oy+37)],"#f3e7c3",PAL["outline"])
+        rect(d,(ox+16,oy+36,ox+20,oy+42),sh); rect(d,(ox+35,oy+36,ox+39,oy+42),sh)
+    elif t==3: # wolf
+        ell(d,(ox+16+lunge,oy+22-bob,ox+43+lunge,oy+38),main,PAL["outline"])
+        rect(d,(ox+5+lunge,oy+17-bob,ox+27+lunge,oy+37),main,PAL["outline"])
+        poly(d,[(ox+7+lunge,oy+20),(ox+8+lunge,oy+8),(ox+17+lunge,oy+18)],sh,PAL["outline"])
+        poly(d,[(ox+19+lunge,oy+17),(ox+25+lunge,oy+7),(ox+27+lunge,oy+23)],sh,PAL["outline"])
+        rect(d,(ox+9+lunge,oy+25,ox+12+lunge,oy+28),"#efd75e"); rect(d,(ox+21+lunge,oy+24,ox+24+lunge,oy+27),"#efd75e")
+        ell(d,(ox+3+lunge,oy+29,ox+12+lunge,oy+36),hi,PAL["outline"])
+        line(d,[(ox+41,oy+26),(ox+47,oy+16)],sh,4)
+        rect(d,(ox+14,oy+35,ox+18,oy+42),sh); rect(d,(ox+35,oy+35,ox+39,oy+42),sh)
+    else: # wisp
+        rad=11+(f%2)
+        ell(d,(ox+24-rad,oy+23-rad-bob,ox+24+rad,oy+23+rad-bob),main+"88")
+        ell(d,(ox+16,oy+14-bob,ox+33,oy+31-bob),main,PAL["outline"])
+        ell(d,(ox+19,oy+16-bob,ox+26,oy+24-bob),hi)
+        rect(d,(ox+18,oy+26,ox+21,oy+29),PAL["outline"]); rect(d,(ox+28,oy+26,ox+31,oy+29),PAL["outline"])
+        for i in range(3):
+            yy=31+i*3; rect(d,(ox+18+i*4,oy+yy,ox+21+i*4,oy+yy+5),main+"aa")
+        if state=="attack":
+            rr=3+f; ell(d,(ox+36-rr,oy+21-rr,ox+36+rr,oy+21+rr),hi+"99")
+
+
+def make_monster_atlas():
+    img=Image.new("RGBA",(MON_COLS*MON_FRAME,len(MON_TYPES)*MON_FRAME),(0,0,0,0))
+    for ti in range(len(MON_TYPES)):
+        for st,(start,count,_fps) in MON_STATES.items():
+            for f in range(count): draw_monster(img,(start+f)*MON_FRAME,ti*MON_FRAME,ti,st,f)
+    img.save(ASSETS/"monsters.png",optimize=True)
+
+
+# --- UI icons -------------------------------------------------------------
+ICON=48
+ICON_NAMES=["staff","sling","orb","bag","stats","potion","coin","settings","sword","archer","mage","boots"]
+
+def icon_panel(d,x,y):
+    ell(d,(x+5,y+36,x+43,y+44),"#07130d55")
+
+def draw_icon(d,x,y,name):
+    icon_panel(d,x,y)
+    if name=="staff":
+        line(d,[(x+13,y+38),(x+34,y+9)],PAL["outline"],7); line(d,[(x+13,y+38),(x+34,y+9)],PAL["wood_hi"],4); ell(d,(x+29,y+5,x+39,y+15),"#c78f4c",PAL["outline"])
+    elif name=="sling":
+        line(d,[(x+23,y+39),(x+15,y+14)],"#6c4226",5); line(d,[(x+23,y+39),(x+33,y+14)],"#6c4226",5); line(d,[(x+15,y+14),(x+33,y+14)],"#d8bd82",2); ell(d,(x+21,y+11,x+27,y+17),"#77736a",PAL["outline"])
+    elif name=="orb":
+        ell(d,(x+10,y+9,x+38,y+37),"#357fc0",PAL["outline"],2)
+        ell(d,(x+14,y+13,x+34,y+33),"#6e76ea")
+        ell(d,(x+17,y+15,x+25,y+23),"#b5e9ff")
+        for ox,oy in [(8,12),(38,17),(31,6)]:
+            rect(d,(x+ox,y+oy,x+ox+2,y+oy+2),"#eaffff")
+    elif name=="bag":
+        px_outline(d,(x+10,y+16,x+38,y+39),"#9a6036",PAL["outline"],2); rect(d,(x+16,y+10,x+32,y+19),"#6b4027",PAL["outline"]); line(d,[(x+14,y+21),(x+34,y+21)],"#d4a052",2); rect(d,(x+19,y+25,x+29,y+31),"#6e4329",PAL["outline"])
+    elif name=="stats":
+        for i,h in enumerate([12,23,32]): px_outline(d,(x+10+i*10,y+38-h,x+16+i*10,y+38),["#b8c0b9","#d5ddd5","#f0e5a8"][i],PAL["outline"])
+    elif name=="potion":
+        rect(d,(x+19,y+8,x+29,y+15),"#a8b4ad",PAL["outline"]); poly(d,[(x+17,y+14),(x+31,y+14),(x+36,y+36),(x+31,y+42),(x+17,y+42),(x+12,y+36)],"#b63c54",PAL["outline"]); rect(d,(x+16,y+25,x+33,y+38),"#e45269"); rect(d,(x+18,y+27,x+23,y+33),"#ff95a0")
+    elif name=="coin":
+        ell(d,(x+9,y+9,x+39,y+39),PAL["gold"],PAL["outline"],2); ell(d,(x+14,y+14,x+34,y+34),PAL["gold_hi"]); rect(d,(x+22,y+16,x+26,y+32),"#bc8239"); rect(d,(x+18,y+20,x+30,y+24),"#bc8239")
+    elif name=="settings":
+        ell(d,(x+13,y+13,x+35,y+35),"#d8ddd8",PAL["outline"]); ell(d,(x+20,y+20,x+28,y+28),"#35423d");
+        for a in range(0,360,45):
+            cx=x+24+int(math.cos(math.radians(a))*16); cy=y+24+int(math.sin(math.radians(a))*16); rect(d,(cx-3,cy-5,cx+3,cy+5),"#c3cbc4",PAL["outline"])
+    elif name=="sword":
+        line(d,[(x+11,y+39),(x+35,y+9)],PAL["outline"],7); line(d,[(x+12,y+38),(x+35,y+9)],"#dce4dc",4); poly(d,[(x+35,y+8),(x+39,y+5),(x+38,y+12)],"#f6fff7",PAL["outline"]); line(d,[(x+10,y+30),(x+23,y+41)],PAL["gold"],5)
+    elif name=="archer":
+        d.arc((x+8,y+5,x+36,y+43),-70,70,fill="#b5793e",width=4); line(d,[(x+29,y+7),(x+29,y+41)],"#e5d5a0",2); line(d,[(x+8,y+25),(x+42,y+25)],"#bec8bf",3); poly(d,[(x+42,y+25),(x+35,y+20),(x+35,y+30)],PAL["gold_hi"],PAL["outline"])
+    elif name=="mage":
+        poly(d,[(x+24,y+5),(x+39,y+37),(x+9,y+37)],"#4165a9",PAL["outline"])
+        rect(d,(x+13,y+34,x+35,y+41),"#293d72",PAL["outline"])
+        for ox,oy in [(20,14),(29,23),(15,28)]:
+            rect(d,(x+ox,y+oy,x+ox+2,y+oy+2),"#f7df76")
+    elif name=="boots":
+        poly(d,[(x+11,y+10),(x+23,y+10),(x+22,y+30),(x+33,y+34),(x+34,y+41),(x+11,y+41)],PAL["boot"],PAL["outline"]); poly(d,[(x+25,y+10),(x+36,y+10),(x+36,y+29),(x+43,y+34),(x+43,y+41),(x+25,y+41)],"#49332a",PAL["outline"])
+
+
+def make_ui_atlas():
+    img=Image.new("RGBA",(len(ICON_NAMES)*ICON,ICON),(0,0,0,0)); d=ImageDraw.Draw(img)
+    for i,n in enumerate(ICON_NAMES): draw_icon(d,i*ICON,0,n)
+    img.save(ASSETS/"ui.png",optimize=True)
+    (ASSETS/"ui.json").write_text(json.dumps({n:{"x":i*ICON,"y":0,"w":ICON,"h":ICON} for i,n in enumerate(ICON_NAMES)},separators=(",",":")),encoding="utf-8")
+
+
+# --- Effects atlas --------------------------------------------------------
+EFFECT_FRAME=48
+EFFECTS={"hit":(0,6),"stone":(6,4),"magic":(10,8),"level":(18,8),"heal":(26,6)}
+
+def make_effects():
+    cols=max(s+c for s,c in EFFECTS.values()); img=Image.new("RGBA",(cols*48,48),(0,0,0,0)); d=ImageDraw.Draw(img)
+    for name,(start,count) in EFFECTS.items():
+        for f in range(count):
+            ox=(start+f)*48
+            if name=="hit":
+                r=4+f*3
+                for a in range(0,360,45):
+                    x1=ox+24+math.cos(math.radians(a))*4; y1=24+math.sin(math.radians(a))*4
+                    x2=ox+24+math.cos(math.radians(a))*r; y2=24+math.sin(math.radians(a))*r
+                    line(d,[(x1,y1),(x2,y2)],"#ffe38b" if f<3 else "#e76c4f",3 if f<3 else 2)
+            elif name=="stone":
+                ell(d,(ox+17,17,ox+31,31),"#72756a",PAL["outline"]); poly(d,[(ox+20,18),(ox+28,17),(ox+25,23)],"#a4a697")
+            elif name=="magic":
+                r=5+(f%4); ell(d,(ox+24-r-3,24-r-3,ox+24+r+3,24+r+3),"#63d8ff55"); ell(d,(ox+24-r,24-r,ox+24+r,24+r),"#6776eb",PAL["outline"]); rect(d,(ox+21,18,ox+24,21),"#ecffff")
+                for a in range(0,360,120):
+                    x=ox+24+int(math.cos(math.radians(a+f*30))*15); y=24+int(math.sin(math.radians(a+f*30))*15); rect(d,(x,y,x+2,y+2),"#d6ffff")
+            elif name=="level":
+                rr=8+f*2
+                d.arc((ox+24-rr,24-rr,ox+24+rr,24+rr),f*30,180+f*30,fill="#ffe27a",width=3)
+                for a in range(0,360,90):
+                    x=ox+24+int(math.cos(math.radians(a+f*20))*rr); y=24+int(math.sin(math.radians(a+f*20))*rr); rect(d,(x-1,y-1,x+2,y+2),"#fff8c4")
+            else:
+                r=4+f*2; ell(d,(ox+24-r,24-r,ox+24+r,24+r),"#58d57b66"); line(d,[(ox+24,16),(ox+24,32)],"#b4ffc2",3); line(d,[(ox+16,24),(ox+32,24)],"#b4ffc2",3)
+    img.save(ASSETS/"effects.png",optimize=True)
+
+
+def main():
+    draw_map(); make_hero_atlas(); make_monster_atlas(); make_ui_atlas(); make_effects()
+    manifest={
+        "hero":{"frameW":32,"frameH":48,"dirs":DIRS,"states":HERO_STATES},
+        "monsters":{"frame":48,"types":MON_TYPES,"states":MON_STATES},
+        "effects":{"frame":48,"states":EFFECTS},
+        "ui":{"frame":48,"names":ICON_NAMES}
+    }
+    (ASSETS/"atlas.json").write_text(json.dumps(manifest,separators=(",",":")),encoding="utf-8")
+    print("Generated",len(list(ASSETS.iterdir())),"asset files")
+
+if __name__=="__main__": main()

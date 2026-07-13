@@ -1,0 +1,9 @@
+{
+  "version":"1.1.0-foundation.1",
+  "status":"PASS",
+  "requiredFiles":14,
+  "htmlBytes":6704,
+  "cssBytes":15681,
+  "javascriptBytes":52167,
+  "errors":[]
+}

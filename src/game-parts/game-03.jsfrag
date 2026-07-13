@@ -1,0 +1,160 @@
+      applyDamageToMonster(monster, damage, weapon.mastery);
+      spawnEffect('hit', monster.px, monster.py - .15, .34);
+    }
+  }
+
+  function applyDamageToMonster(monster, damage, mastery) {
+    if (monster.dead) return;
+    monster.hp -= damage;
+    monster.hitLock = .22;
+    monster.state = 'hit'; monster.stateTime = 0; monster.aggro = true;
+    gainMastery(mastery, randomInt(2, 4));
+    floatText(`-${damage}`, monster.px, monster.py - .7, '#ffe18b');
+    if (monster.hp <= 0) killMonster(monster);
+    game.uiDirty = true;
+  }
+
+  function updateProjectiles(dt) {
+    for (let i = game.projectiles.length - 1; i >= 0; i--) {
+      const projectile = game.projectiles[i];
+      projectile.life -= dt;
+      const target = game.monsters.find(m => m.id === projectile.targetId && !m.dead);
+      if (!target || projectile.life <= 0) { game.projectiles.splice(i, 1); continue; }
+      const dx = target.px - projectile.x, dy = target.py - .18 - projectile.y;
+      const d = Math.hypot(dx, dy);
+      if (d < .15) {
+        applyDamageToMonster(target, projectile.damage, projectile.mastery);
+        spawnEffect('hit', target.px, target.py - .15, .34);
+        game.projectiles.splice(i, 1);
+        continue;
+      }
+      const amount = Math.min(d, projectile.speed * dt);
+      projectile.x += dx / d * amount; projectile.y += dy / d * amount;
+    }
+  }
+
+  function updateMonsters(dt) {
+    const t = now();
+    for (const monster of game.monsters) {
+      if (monster.dead) {
+        if (t >= monster.respawnAt) respawnMonster(monster);
+        continue;
+      }
+      monster.attackCooldown = Math.max(0, monster.attackCooldown - dt);
+      monster.hitLock = Math.max(0, monster.hitLock - dt);
+
+      if (monster.pendingAttack) {
+        monster.stateTime += dt;
+        const attack = monster.pendingAttack;
+        if (!attack.fired && monster.stateTime >= attack.hitAt) {
+          attack.fired = true;
+          if (!game.player.dying && distance(monster, game.player) <= 1.45) damagePlayer(attack.damage);
+        }
+        if (monster.stateTime >= attack.duration) {
+          monster.pendingAttack = null; monster.state = 'idle'; monster.stateTime = 0;
+        }
+        continue;
+      }
+      if (monster.hitLock > 0) { monster.state = 'hit'; monster.stateTime += dt; continue; }
+
+      const playerDistance = distance(monster, game.player);
+      if (!game.player.dying && (monster.aggro || playerDistance <= MONSTER_DEFS[monster.type].aggro)) monster.aggro = true;
+      if (monster.aggro && !game.player.dying) {
+        if (playerDistance <= 1.25 && monster.attackCooldown <= 0) startMonsterAttack(monster);
+        else if (playerDistance > 1.1) {
+          if (!monster.path.length && !monster.to) monster.path = findPath(monster, game.player, 1, { ignoreMonsters: true });
+          if (updateMovement(monster, dt, false)) monster.stateTime += dt;
+          else { monster.state = 'idle'; monster.stateTime += dt; }
+        }
+        if (playerDistance > 10) { monster.aggro = false; monster.path = []; }
+      } else {
+        if (updateMovement(monster, dt, false)) monster.stateTime += dt;
+        else {
+          monster.state = 'idle'; monster.stateTime += dt;
+          if (t >= monster.wanderAt) {
+            monster.wanderAt = t + 2 + Math.random() * 5;
+            const goal = { x: clamp(monster.spawnX + randomInt(-3, 3), 1, game.map.width - 2), y: clamp(monster.spawnY + randomInt(-3, 3), 1, game.map.height - 2) };
+            monster.path = findPath(monster, goal, 0, { ignoreMonsters: true });
+          }
+        }
+      }
+    }
+  }
+
+  function startMonsterAttack(monster) {
+    stopMovement(monster);
+    faceToward(monster, game.player);
+    const def = MONSTER_DEFS[monster.type];
+    monster.state = 'attack'; monster.stateTime = 0; monster.attackCooldown = def.attackRate;
+    monster.pendingAttack = { hitAt: .42, duration: .70, fired: false, damage: def.damage + Math.floor(monster.level * .7) };
+  }
+
+  function damagePlayer(rawDamage) {
+    const reduction = Math.min(rawDamage - 1, Math.floor(defenseValue() * .17));
+    const damage = Math.max(1, rawDamage - reduction);
+    game.player.hp -= damage;
+    game.player.hitLock = .25; game.player.state = 'hit'; game.player.stateTime = 0;
+    gainMastery('defense', randomInt(2, 4));
+    floatText(`-${damage}`, game.player.px, game.player.py - .8, '#ff918d');
+    spawnEffect('hit', game.player.px, game.player.py - .15, .32);
+    if (game.player.hp <= 0) killPlayer();
+    game.uiDirty = true;
+  }
+
+  function killPlayer() {
+    if (game.player.dying) return;
+    stopMovement(game.player);
+    game.player.hp = 0; game.player.dying = true; game.player.state = 'death'; game.player.stateTime = 0; game.player.respawnTimer = 2.2;
+    game.selectedMonsterId = null;
+    ui.deathVignette.classList.add('show');
+    for (const monster of game.monsters) { monster.aggro = false; monster.path = []; monster.pendingAttack = null; }
+    saveGame(); syncUi(true);
+  }
+
+  function respawnPlayer() {
+    const respawn = game.map.villageRespawn;
+    Object.assign(game.player, makeMover(respawn.x, respawn.y));
+    game.player.hp = maxHp(); game.player.mp = maxMp(); game.player.state = 'idle'; game.player.stateTime = 0;
+    game.player.dying = false; game.player.respawnTimer = 0; game.player.pendingAttack = null; game.player.attackCooldown = .5;
+    ui.deathVignette.classList.remove('show');
+    toast('Réapparition au Village de Solenne', 'level');
+    saveGame(); syncUi(true);
+  }
+
+  function killMonster(monster) {
+    monster.hp = 0; monster.dead = true; monster.state = 'death'; monster.stateTime = 0; monster.path = []; monster.pendingAttack = null;
+    monster.respawnAt = now() + 10 + Math.random() * 7;
+    if (game.selectedMonsterId === monster.id) game.selectedMonsterId = null;
+    const def = MONSTER_DEFS[monster.type];
+    const generalXp = def.xp + monster.level * 5;
+    const classXp = def.classXp + monster.level * 3;
+    const gold = randomInt(def.gold[0], def.gold[1]);
+    gainGeneralXp(generalXp); gainClassXp(classXp); game.state.player.gold += gold;
+    toast(`+${generalXp} XP · +${classXp} classe · +${gold} or`, 'loot');
+    rollLoot(monster);
+    saveGame(); syncUi(true);
+  }
+
+  function respawnMonster(monster) {
+    const def = MONSTER_DEFS[monster.type];
+    monster.dead = false; monster.x = monster.spawnX; monster.y = monster.spawnY; monster.px = monster.x; monster.py = monster.y;
+    monster.path = []; monster.to = null; monster.from = null; monster.state = 'idle'; monster.stateTime = 0; monster.aggro = false;
+    monster.maxHp = def.hp + Math.max(0, monster.level - 1) * 9; monster.hp = monster.maxHp;
+  }
+
+  function gainGeneralXp(amount) {
+    game.state.player.xp += amount;
+    let needed = generalXpNeeded(game.state.player.level);
+    while (game.state.player.xp >= needed) {
+      game.state.player.xp -= needed;
+      game.state.player.level += 1;
+      game.state.player.baseMaxHp += 9;
+      if (game.state.player.level % 3 === 0) game.state.player.baseMaxMp += 2;
+      game.player.hp = maxHp(); game.player.mp = maxMp();
+      toast(`Niveau ${game.state.player.level} ! Vitesse ${playerSpeed()}`, 'level');
+      spawnEffect('level', game.player.px, game.player.py - .4, .9);
+      needed = generalXpNeeded(game.state.player.level);
+    }
+  }
+
+  function gainClassXp(amount) {

@@ -1,0 +1,16 @@
+{
+  "version":"1.1.0-foundation.1",
+  "stage":"STEP_1_COMPLETE",
+  "status":"PASS",
+  "repository":"Woulette/Nouveau-d-p-t-jeu",
+  "targetBranch":"develop",
+  "backupBranch":"foundation-backup-alpha3",
+  "vercelProject":"chroniques-de-solenne",
+  "sourceFilesTracked":41,
+  "assetMetrics":{"heroAnimationFrames":148,"monsterAnimationFrames":115,"uiIcons":12,"effectFrames":32},
+  "build":{"fileCount":14,"totalBytes":538897},
+  "mobileViewports":["667x375","844x390","896x414","932x430"],
+  "temporaryPathDependencies":0,
+  "legacyPlaceholdersInRelease":0,
+  "checks":{"assets":"PASS","static":"PASS","reproducibility":"PASS","mobile":"PASS","releaseBuild":"PASS"}
+}
