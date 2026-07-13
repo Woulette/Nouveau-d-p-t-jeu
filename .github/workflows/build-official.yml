@@ -1,0 +1,60 @@
+name: Build official Chroniques de Solenne alpha
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "official/**"
+      - ".github/workflows/build-official.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: chroniques-de-solenne-official-build
+  cancel-in-progress: true
+
+jobs:
+  build:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install asset tools
+        run: python -m pip install --disable-pip-version-check pillow
+
+      - name: Generate original pixel-art assets
+        run: |
+          cd official
+          python scripts/generate_hd_assets.py
+
+      - name: Build the self-contained production game
+        run: |
+          cd official
+          python scripts/build_single.py
+          test -s dist/index.html
+          grep -q "1.1.0-alpha.1" dist/index.html
+          mkdir -p ../dist
+          cp dist/index.html ../dist/index.html
+
+      - name: Save generated assets and production build
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add official/public/assets official/dist/index.html dist/index.html
+          if git diff --cached --quiet; then
+            echo "Generated files are already current."
+          else
+            git commit -m "build: generate official pixel-art assets and production bundle [skip ci]"
+            git push
+          fi
