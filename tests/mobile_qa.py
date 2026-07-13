@@ -20,6 +20,13 @@ VIEWPORTS = [(667, 375), (844, 390), (896, 414), (932, 430)]
 
 
 class QuietHandler(SimpleHTTPRequestHandler):
+    def do_GET(self) -> None:
+        if self.path.split('?', 1)[0] == '/favicon.ico':
+            self.send_response(204)
+            self.end_headers()
+            return
+        super().do_GET()
+
     def log_message(self, format: str, *args: object) -> None:
         return
 
@@ -124,12 +131,12 @@ async def functional_checks(page: Page) -> dict[str, object]:
         )
         await page.wait_for_function(
             """([state]) => window.__SOLENNE__.player.state === state""",
-            [expected_states[weapon]],
+            arg=[expected_states[weapon]],
             timeout=5_000,
         )
         await page.wait_for_function(
             """([mastery,beforeXp]) => window.__SOLENNE__.snapshot().masteries[mastery].xp > beforeXp""",
-            [mastery, before['xp']],
+            arg=[mastery, before['xp']],
             timeout=5_000,
         )
         after = await page.evaluate(
@@ -159,7 +166,7 @@ async def functional_checks(page: Page) -> dict[str, object]:
     await page.evaluate("() => {window.__SOLENNE__.monsters[0].attackCooldown=0;window.__SOLENNE__.monsters[0].aggro=true;}")
     await page.wait_for_function(
         """before => window.__SOLENNE__.snapshot().masteries.defense.xp > before""",
-        defense_before,
+        arg=defense_before,
         timeout=5_000,
     )
     defense_after = await page.evaluate("window.__SOLENNE__.snapshot().masteries.defense.xp")
@@ -171,7 +178,7 @@ async def functional_checks(page: Page) -> dict[str, object]:
     await page.locator('#potion-button').click()
     await page.wait_for_function(
         """before => window.__SOLENNE__.snapshot().inventory.potion === before - 1""",
-        potion_before,
+        arg=potion_before,
         timeout=2_000,
     )
     potion_after = await page.evaluate("({count:window.__SOLENNE__.snapshot().inventory.potion,hp:window.__SOLENNE__.snapshot().player.hp})")
