@@ -1,8 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
-  "buildCommand": "python3 -m pip install --disable-pip-version-check --no-cache-dir -r requirements-build.txt && python3 scripts/build_all.py",
-  "outputDirectory": "dist",
+  "installCommand": "",
+  "buildCommand": "test -s public/index.html && test -s public/src/game.js && test -s public/assets/hero.png && echo 'Validated Chroniques de Solenne static release ready'",
+  "outputDirectory": "public",
   "cleanUrls": true,
   "headers": [
     {
