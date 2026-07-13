@@ -1,0 +1,140 @@
+    rect(d,(ox+22,y+20,ox+24,y+34),PAL["navy_sh"])
+    # scarf and shoulder cloth
+    rect(d,(ox+7,y+17,ox+25,y+22),PAL["scarf"],PAL["outline"])
+    rect(d,(ox+5,y+20,ox+9,y+29),"#1b3553",PAL["outline"])
+    # belt
+    rect(d,(ox+7,y+32,ox+25,y+36),PAL["belt"],PAL["outline"])
+    rect(d,(ox+14,y+32,ox+20,y+37),PAL["gold"],PAL["outline"])
+    rect(d,(ox+16,y+34,ox+18,y+35),"#251d17")
+    # front arm pose
+    hand_x,hand_y=22,31
+    if state=="staff":
+        phases=[(-15,25),(-9,20),(0,17),(12,21),(17,30),(5,34)]
+        hand_x,hand_y=phases[f]
+        hand_x=16+hand_x//2; hand_y=hand_y
+    elif state=="sling":
+        hand_x=24 if direction!="left" else 3
+        hand_y=[30,26,22,18,24,30][f]
+    elif state=="cast":
+        hand_x=25 if direction!="left" else 2
+        hand_y=[30,25,19,15,18,25][f]
+    elif state=="hit":
+        hand_x=20; hand_y=30
+    elif state=="walk":
+        hand_y=31-arm_swing
+    armx=ox+(20 if direction!="left" else 5)
+    if state in ("staff","sling","cast"):
+        armx=ox+hand_x-3
+    rect(d,(armx,y+21,armx+6,y+33),body,PAL["outline"])
+    rect(d,(armx+1,y+30,armx+5,y+36),PAL["skin"],PAL["outline"])
+    # head
+    px_outline(d,(ox+8,y+6,ox+24,y+20),PAL["skin_hi"] if flash else PAL["skin"],PAL["outline"])
+    rect(d,(ox+8,y+13,ox+10,y+19),PAL["skin_sh"])
+    rect(d,(ox+22,y+12,ox+24,y+18),PAL["skin_sh"])
+    # hair volume and tufts
+    rect(d,(ox+7,y+3,ox+25,y+10),PAL["hair"],PAL["outline"])
+    rect(d,(ox+5,y+7,ox+11,y+15),PAL["hair"],PAL["outline"])
+    rect(d,(ox+21,y+6,ox+27,y+15),PAL["hair_sh"],PAL["outline"])
+    poly(d,[(ox+9,y+3),(ox+12,y),(ox+15,y+4),(ox+18,y+1),(ox+21,y+4),(ox+24,y+2),(ox+25,y+8),(ox+8,y+8)],PAL["hair_hi"],PAL["outline"])
+    rect(d,(ox+8,y+5,ox+12,y+7),"#8b583a")
+    # face per direction
+    blink=state=="idle" and f==3
+    eye=PAL["hair_sh"]
+    if direction=="down":
+        if blink:
+            rect(d,(ox+11,y+14,ox+14,y+14),eye); rect(d,(ox+19,y+14,ox+22,y+14),eye)
+        else:
+            rect(d,(ox+11,y+13,ox+14,y+16),eye); rect(d,(ox+19,y+13,ox+22,y+16),eye)
+            rect(d,(ox+12,y+13,ox+12,y+13),"#fff5dd"); rect(d,(ox+20,y+13,ox+20,y+13),"#fff5dd")
+        rect(d,(ox+15,y+18,ox+18,y+18),"#a06452")
+    elif direction=="left":
+        rect(d,(ox+9,y+13,ox+12,y+16),eye); rect(d,(ox+10,y+13,ox+10,y+13),"#fff")
+    elif direction=="right":
+        rect(d,(ox+20,y+13,ox+23,y+16),eye); rect(d,(ox+21,y+13,ox+21,y+13),"#fff")
+    else:
+        # back of head with hair/scarf
+        rect(d,(ox+10,y+11,ox+22,y+18),PAL["hair"])
+        rect(d,(ox+12,y+18,ox+20,y+21),PAL["scarf"])
+    # weapon/effect
+    if state=="staff":
+        angles=[-2.0,-1.3,-0.5,0.2,0.8,1.25]
+        a=angles[f]
+        cx,cy=ox+16,y+27
+        ex,ey=cx+int(math.cos(a)*27),cy+int(math.sin(a)*27)
+        line(d,[(cx,cy),(ex,ey)],PAL["outline"],5)
+        line(d,[(cx,cy),(ex,ey)],PAL["wood_hi"],3)
+        ell(d,(ex-3,ey-3,ex+3,ey+3),"#c68b45",PAL["outline"])
+    elif state=="sling":
+        sx=ox+(3 if direction=="left" else 28); sy=y+20
+        spread=[8,10,12,15,7,4][f]
+        sign=-1 if direction=="left" else 1
+        line(d,[(sx,sy),(sx+sign*spread,sy-7)],"#d7be84",2)
+        line(d,[(sx,sy),(sx+sign*spread,sy+7)],"#d7be84",2)
+        ell(d,(sx+sign*spread-2,sy-2,sx+sign*spread+2,sy+2),"#6a665c",PAL["outline"])
+    elif state=="cast":
+        gx=ox+(2 if direction=="left" else 29); gy=y+18
+        rad=[2,3,5,7,6,3][f]
+        ell(d,(gx-rad-2,gy-rad-2,gx+rad+2,gy+rad+2),"#4dcef366")
+        ell(d,(gx-rad,gy-rad,gx+rad,gy+rad),"#65dcff",PAL["outline"])
+        rect(d,(gx-1,gy-rad+1,gx+1,gy-rad+3),"#efffff")
+
+
+def make_hero_atlas():
+    fw,fh=HERO_FRAME
+    img=Image.new("RGBA",(HERO_COLS*fw,len(DIRS)*fh),(0,0,0,0))
+    for di in range(len(DIRS)):
+        for st,(start,count,_fps) in HERO_STATES.items():
+            for f in range(count):
+                draw_hero_frame(img,(start+f)*fw,di*fh,di,st,f)
+    img.save(ASSETS/"hero.png",optimize=True)
+    # portrait from down idle frame enlarged with nearest-neighbor
+    portrait=img.crop((0,3*fh,fw,4*fh)).resize((96,144),Image.Resampling.NEAREST).crop((0,6,96,102))
+    portrait.save(ASSETS/"portrait.png",optimize=True)
+
+
+# --- Monster atlas --------------------------------------------------------
+MON_FRAME=48
+MON_STATES={"idle":(0,4,3),"walk":(4,4,7),"attack":(8,6,10),"hit":(14,3,9),"death":(17,6,8)}
+MON_COLS=23
+MON_TYPES=["slime","rat","boar","wolf","wisp"]
+
+
+def monster_color(t:int,hit=False):
+    colors=[("#5bad58","#85d174","#34773c"),("#70645f","#9a8880","#4c403d"),("#80513d","#b87854","#4f3028"),("#596662","#82908a","#39433f"),("#59c9cf","#b2ffff","#337c8c")]
+    if hit:return "#d75f6a","#ff9ca5","#78343c"
+    return colors[t]
+
+
+def draw_monster(img,ox,oy,t,state,f):
+    d=ImageDraw.Draw(img); main,hi,sh=monster_color(t,state=="hit" and f%2==0)
+    if state=="death":
+        k=f/5
+        ell(d,(ox+9,oy+38,ox+39,oy+45),"#07130d66")
+        rect(d,(ox+9+int(k*4),oy+27+int(k*9),ox+39-int(k*4),oy+38),sh,PAL["outline"])
+        for i in range(3):
+            if f>2+i: rect(d,(ox+14+i*8,oy+22-i*3,ox+16+i*8,oy+24-i*3),hi)
+        return
+    bob=1 if state in ("walk","idle") and f%2 else 0
+    lunge=[0,0,2,5,3,0][f%6] if state=="attack" else 0
+    ell(d,(ox+9,oy+37,ox+39,oy+44),"#07130d77")
+    if t==0: # slime
+        ell(d,(ox+8,oy+16-bob,ox+40,oy+39),main,PAL["outline"])
+        rect(d,(ox+10,oy+25-bob,ox+38,oy+37),main)
+        rect(d,(ox+13,oy+18-bob,ox+22,oy+22),hi)
+        rect(d,(ox+14,oy+28-bob,ox+17,oy+31),PAL["outline"]); rect(d,(ox+30,oy+28-bob,ox+33,oy+31),PAL["outline"])
+        rect(d,(ox+15,oy+28-bob,ox+15,oy+28),"#fff"); rect(d,(ox+31,oy+28-bob,ox+31,oy+28),"#fff")
+        if state=="attack": rect(d,(ox+18,oy+34,ox+30+lunge,oy+37),sh)
+    elif t==1: # rat
+        ell(d,(ox+16+lunge,oy+24-bob,ox+40+lunge,oy+38),main,PAL["outline"])
+        ell(d,(ox+8+lunge,oy+20-bob,ox+27+lunge,oy+36),main,PAL["outline"])
+        ell(d,(ox+8+lunge,oy+14-bob,ox+16+lunge,oy+23),hi,PAL["outline"])
+        ell(d,(ox+19+lunge,oy+14-bob,ox+27+lunge,oy+23),hi,PAL["outline"])
+        rect(d,(ox+11+lunge,oy+25,ox+14+lunge,oy+28),PAL["outline"]); rect(d,(ox+21+lunge,oy+24,ox+24+lunge,oy+27),PAL["outline"])
+        ell(d,(ox+5+lunge,oy+30,ox+10+lunge,oy+34),"#e6a5a8",PAL["outline"])
+        line(d,[(ox+39,oy+31),(ox+46,oy+26),(ox+47,oy+20)],"#9a7e76",2)
+        for yy in (28,32): line(d,[(ox+8,oy+yy),(ox+1,oy+yy-2)],"#d6c8b6",1)
+    elif t==2: # boar
+        ell(d,(ox+12+lunge,oy+21-bob,ox+43+lunge,oy+39),main,PAL["outline"])
+        rect(d,(ox+5+lunge,oy+18-bob,ox+26+lunge,oy+37),main,PAL["outline"])
+        poly(d,[(ox+7+lunge,oy+19),(ox+9+lunge,oy+10),(ox+16+lunge,oy+20)],sh,PAL["outline"])
+        poly(d,[(ox+20+lunge,oy+19),(ox+24+lunge,oy+11),(ox+27+lunge,oy+23)],sh,PAL["outline"])
