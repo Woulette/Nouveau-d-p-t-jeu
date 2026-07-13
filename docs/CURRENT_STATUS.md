@@ -10,7 +10,7 @@ Dépôt unique : `Woulette/Nouveau-d-p-t-jeu`.
 
 - `main` : `2c64ef242f209e0218663a5c0dd1debdd90c987d` — ancienne alpha stable, non modifiée pendant la consolidation ;
 - `foundation-backup-alpha3` : sauvegarde de l’ancienne alpha ;
-- `develop` : branche de travail officielle ; elle contient la fondation validée `ba407a327c64974c6c53462984166a650e56aeb9` et les documents de passation ajoutés après la validation technique ;
+- `develop` : branche de travail officielle ; elle contient la fondation validée et les documents de passation obligatoires ;
 - `develop-consolidation-work` : `ba407a327c64974c6c53462984166a650e56aeb9`, conservé comme point historique du chantier ;
 - `develop-before-consolidation-20260713` : `ada6c571893ab892536c2598e5fd962611a3c363`, sauvegarde intégrale de l’ancien `develop` avant sa remise au propre.
 
@@ -54,13 +54,21 @@ Après la bascule de branche et l’ajout des documents de passation :
 - branche testée : `develop` ;
 - résultat : **PASS** ;
 - artefact : `8288220304` ;
-- nom : `solenne-foundation-validation-01ed762929fb6d92f64ae474698caf0c87574524` ;
 - empreinte : `sha256:9b022a643eb25feb7b5386da553475d0bab54000c6f502f882fbe2e4306873ba` ;
 - conservation prévue jusqu’au **11 octobre 2026**.
 
-Les commits effectués après ce run ne modifient que la documentation de suivi. Aucun fichier du moteur, de l’interface, des assets, du build ou des tests n’est modifié par cette mise à jour d’état.
+### Verrouillage de l’infrastructure
 
-Les artefacts contiennent la release, les rapports JSON et cinq captures mobiles.
+Après la confirmation formelle de l’utilisateur concernant Voidsector :
+
+- document ajouté : `docs/INFRASTRUCTURE_PROTECTION.md` ;
+- document rendu obligatoire depuis `PROJECT_CONTEXT.md` ;
+- commit contrôlé : `8b01284547f870e78bf78a1a08a969cad069f32c` ;
+- workflow : `Validate Chroniques de Solenne foundation` ;
+- run : `29273947600` ;
+- résultat : **PASS**.
+
+Ces changements ne modifient aucun fichier du moteur, de l’interface, des assets, du build ou des tests. Les artefacts de validation contiennent la release, les rapports JSON et les captures mobiles.
 
 ## QA mobile et fonctionnelle
 
@@ -85,11 +93,25 @@ Le scénario fonctionnel 896 × 414 valide également :
 
 Rapport généré : `tests/mobile-qa-report.json` dans l’artefact GitHub Actions.
 
+## Protection formelle de Voidsector
+
+`voidsector-game` appartient à un autre jeu, déjà terminé ou proche de sa bêta. Il est totalement hors périmètre de Chroniques de Solenne.
+
+Dans le cadre de ce projet, il est formellement interdit de modifier, renommer, relier, transférer, redéployer ou réutiliser :
+
+- le dépôt GitHub de Voidsector ;
+- le projet Vercel `voidsector-game` ;
+- ses domaines, variables, intégrations, branches ou réglages.
+
+Voidsector ne doit jamais servir de cible temporaire ou de solution de contournement. Toute action Vercel ambiguë doit être annulée plutôt que risquer de viser ce projet.
+
+La règle détaillée et permanente se trouve dans `docs/INFRASTRUCTURE_PROTECTION.md`.
+
 ## État réel de Vercel
 
 Équipe connectée vérifiée : **Bigot's projects**.
 
-Au moment du contrôle :
+Au moment du dernier contrôle :
 
 - le projet obligatoire `chroniques-de-solenne` n’apparaît pas dans cette équipe ;
 - l’URL `chroniques-de-solenne.vercel.app` ne correspond à aucun déploiement accessible ;
@@ -118,6 +140,7 @@ Toute nouvelle conversation doit d’abord lire intégralement :
 
 1. `docs/NEXT_CHAT_HANDOFF.md` ;
 2. `docs/CURRENT_STATUS.md` ;
-3. `docs/VISUAL_STANDARD.md`.
+3. `docs/INFRASTRUCTURE_PROTECTION.md` ;
+4. `docs/VISUAL_STANDARD.md`.
 
 Le prochain travail de jeu part de `develop`. Il ne faut ni repartir des anciennes variantes `official/` ou `release/0.7`, ni dégrader la direction artistique, ni créer un autre dépôt ou projet Vercel.
