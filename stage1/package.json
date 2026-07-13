@@ -1,0 +1,11 @@
+{
+  "name": "chroniques-de-solenne-stage1",
+  "version": "0.8.0-alpha.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tests/static-check.mjs",
+    "serve": "npx serve . -l 4173"
+  },
+  "engines": { "node": ">=20" }
+}
