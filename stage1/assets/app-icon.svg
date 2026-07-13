@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 128 128" shape-rendering="crispEdges">
+<rect width="128" height="128" rx="24" fill="#0b1813"/><rect x="6" y="6" width="116" height="116" rx="19" fill="none" stroke="#d6b15e" stroke-width="4"/>
+<path d="M64 15l7 15 16-5-7 15 15 8-15 7 7 16-16-5-7 15-7-15-16 5 7-16-15-7 15-8-7-15 16 5z" fill="#c79236"/>
+<circle cx="64" cy="49" r="22" fill="#315d8d" stroke="#142b43" stroke-width="4"/>
+<rect x="46" y="69" width="36" height="35" fill="#315d8d"/><rect x="51" y="72" width="10" height="29" fill="#3f72a2"/><rect x="73" y="72" width="7" height="29" fill="#183956"/>
+<rect x="45" y="18" width="38" height="21" fill="#4b2b20"/><rect x="39" y="25" width="15" height="20" fill="#5d3525"/><rect x="76" y="23" width="15" height="23" fill="#3b221a"/><rect x="53" y="12" width="26" height="13" fill="#5a3425"/>
+<rect x="49" y="42" width="9" height="8" fill="#171515"/><rect x="71" y="42" width="9" height="8" fill="#171515"/><rect x="52" y="43" width="3" height="3" fill="#fff8df"/><rect x="74" y="43" width="3" height="3" fill="#fff8df"/><rect x="58" y="58" width="14" height="4" fill="#b36c5d"/>
+<rect x="44" y="97" width="40" height="8" fill="#2a211d"/><rect x="57" y="94" width="14" height="12" fill="#d0a04d"/><path d="M22 108h84" stroke="#d6b15e" stroke-width="4"/>
+</svg>
