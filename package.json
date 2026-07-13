@@ -9,7 +9,7 @@
     "build": "python3 scripts/build_all.py",
     "build:release": "python3 scripts/build_release.py",
     "build:standalone": "python3 scripts/build_single_file.py",
-    "check": "node --check src/game.js && python3 -m py_compile scripts/*.py tests/*.py",
+    "check": "python3 scripts/check_sources.py",
     "test:static": "python3 tests/static_validation.py",
     "test:repro": "python3 tests/reproducibility.py",
     "test:mobile": "python3 tests/mobile_qa.py",
