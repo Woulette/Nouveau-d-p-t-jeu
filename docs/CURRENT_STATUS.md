@@ -2,7 +2,7 @@
 
 Dernière mise à jour : **13 juillet 2026**.
 
-Ce fichier contient l’état opérationnel à relire après `docs/NEXT_CHAT_HANDOFF.md`. Pour les faits temporels (branches, validation et Vercel), ce document est prioritaire.
+Ce fichier contient l’état opérationnel à relire après `docs/NEXT_CHAT_HANDOFF.md`. Pour les faits temporels concernant les branches, la validation et Vercel, ce document est prioritaire.
 
 ## Dépôt et branches
 
@@ -10,11 +10,13 @@ Dépôt unique : `Woulette/Nouveau-d-p-t-jeu`.
 
 - `main` : `2c64ef242f209e0218663a5c0dd1debdd90c987d` — ancienne alpha stable, non modifiée pendant la consolidation ;
 - `foundation-backup-alpha3` : sauvegarde de l’ancienne alpha ;
-- `develop` : `ba407a327c64974c6c53462984166a650e56aeb9` — fondation consolidée et validée ;
-- `develop-consolidation-work` : même commit validé, conservé comme branche historique du chantier ;
-- `develop-before-consolidation-20260713` : `ada6c571893ab892536c2598e5fd962611a3c363` — sauvegarde intégrale de l’ancien `develop` avant sa remise au propre.
+- `develop` : branche de travail officielle ; elle contient la fondation validée `ba407a327c64974c6c53462984166a650e56aeb9` et les documents de passation ajoutés après la validation technique ;
+- `develop-consolidation-work` : `ba407a327c64974c6c53462984166a650e56aeb9`, conservé comme point historique du chantier ;
+- `develop-before-consolidation-20260713` : `ada6c571893ab892536c2598e5fd962611a3c363`, sauvegarde intégrale de l’ancien `develop` avant sa remise au propre.
 
 Aucun dépôt GitHub supplémentaire n’a été créé. `main` n’a pas été fusionnée ni réécrite.
+
+La PR finale de contrôle est la **PR #2**, ouverte en brouillon depuis `develop` vers `main`. Elle ne doit pas être fusionnée avant la validation Vercel distante.
 
 ## Build validé
 
@@ -31,20 +33,34 @@ Le build est entièrement reproductible à partir des sources du dépôt :
 
 Les vrais assets ont été conservés. Aucun sprite, décor, effet ou icône n’a été remplacé par un emoji, un rectangle ou un placeholder.
 
-## Validation GitHub Actions
+## Validations GitHub Actions
 
-Dernière validation complète réussie :
+### Fondation technique
 
 - workflow : `Validate Chroniques de Solenne foundation` ;
 - run : `29272490520` ;
 - commit testé : `ba407a327c64974c6c53462984166a650e56aeb9` ;
 - résultat : **PASS** ;
 - artefact : `8288039020` ;
-- nom : `solenne-foundation-validation-ac468b9b375301a6e5c0a874e3c81097e8a0f0e1` ;
-- empreinte : `sha256:5375b89ff65d2d8e392cbc5e33916fc25cc91eb4d3ae0f74e310420db1318649` ;
+- empreinte : `sha256:5375b89ff65d2d8e392cbc5e33916fc25cc91eb4d3ae0f74e310420db1318649`.
+
+### Branche officielle `develop`
+
+Après la bascule de branche et l’ajout des documents de passation :
+
+- workflow : `Validate Chroniques de Solenne foundation` ;
+- run : `29273010400` ;
+- commit testé : `b1ecb0a4e3151611eea4e121dddc542433085392` ;
+- branche testée : `develop` ;
+- résultat : **PASS** ;
+- artefact : `8288220304` ;
+- nom : `solenne-foundation-validation-01ed762929fb6d92f64ae474698caf0c87574524` ;
+- empreinte : `sha256:9b022a643eb25feb7b5386da553475d0bab54000c6f502f882fbe2e4306873ba` ;
 - conservation prévue jusqu’au **11 octobre 2026**.
 
-L’artefact contient la release, les rapports JSON et cinq captures mobiles.
+Les commits effectués après ce run ne modifient que la documentation de suivi. Aucun fichier du moteur, de l’interface, des assets, du build ou des tests n’est modifié par cette mise à jour d’état.
+
+Les artefacts contiennent la release, les rapports JSON et cinq captures mobiles.
 
 ## QA mobile et fonctionnelle
 
@@ -84,7 +100,7 @@ Conformément aux consignes, **aucun nouveau projet Vercel n’a été créé** 
 
 ## Blocage actuel et prochaine action exacte
 
-Le code est prêt pour une prévisualisation Vercel depuis `develop`, mais le projet Vercel officiel doit d’abord être **restauré, reconnecté ou rendu visible dans le compte/équipe connecté**.
+Le code est prêt pour une prévisualisation Vercel depuis `develop`, mais le projet Vercel officiel doit d’abord être **restauré, reconnecté ou rendu visible dans le compte ou l’équipe connecté**.
 
 Dès que `chroniques-de-solenne` est de nouveau visible :
 
