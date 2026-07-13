@@ -1,0 +1,13 @@
+{
+  "name": "Chroniques de Solenne",
+  "short_name": "Solenne",
+  "description": "MMORPG mobile 2D en pixel art — Alpha jouable.",
+  "start_url": "./?source=pwa",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0e1c16",
+  "theme_color": "#0e1c16",
+  "icons": [
+    {"src":"./assets/portrait.png","sizes":"96x96","type":"image/png","purpose":"any maskable"}
+  ]
+}
