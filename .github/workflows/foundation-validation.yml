@@ -95,4 +95,4 @@ jobs:
             tests/mobile-qa-report.json
             tests/output/*.png
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 90
