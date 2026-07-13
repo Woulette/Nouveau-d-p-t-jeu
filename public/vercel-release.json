@@ -1,5 +1,5 @@
 {
-  "sourceCommit": "843d01317fbf60aa2ae1beef4953d7e8b0f62efe",
+  "sourceCommit": "d9ab666a66a22830ef8cdd1eef11d9f7165cd46b",
   "sourceBranch": "main",
   "workflow": "Prepare validated Vercel static release",
   "version": "1.1.0-foundation.1",
