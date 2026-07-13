@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#17261d" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="screen-orientation" content="landscape" />
+    <meta name="description" content="Prototype mobile du MMORPG Chroniques de Solenne." />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./public/assets/ui/icon-192.png" />
+    <link rel="apple-touch-icon" href="./public/assets/ui/icon-192.png" />
+    <link rel="stylesheet" href="./styles.css" />
+    <title>Chroniques de Solenne — Alpha 1.1</title>
+  </head>
+  <body>
+    <main id="game-shell" aria-label="Chroniques de Solenne">
+      <canvas id="game-canvas" aria-label="Zone de jeu"></canvas>
+
+      <div id="loading-screen" class="loading-screen">
+        <img src="./public/assets/ui/icon-192.png" alt="" />
+        <h1>Chroniques de Solenne</h1>
+        <p>Ouverture de la Clairière…</p>
+        <div class="loading-track"><span id="loading-progress"></span></div>
+      </div>
+
+      <section id="player-card" class="hud-card player-card" aria-label="Personnage">
+        <div class="avatar-frame">
+          <img id="player-avatar" src="./public/assets/characters/adventurer_staff_down_0.png" alt="Portrait du personnage" />
+        </div>
+        <div class="player-card-main">
+          <div class="player-line">
+            <div>
+              <strong id="location-name">Village de Solenne</strong>
+              <span id="player-name">Voyageur 801</span>
+            </div>
+            <span id="level-badge" class="level-badge">Niv. 1</span>
+          </div>
+          <div class="resource-row">
+            <span>PV</span>
+            <div class="bar health"><i id="health-fill"></i></div>
+            <b id="health-text">100/100</b>
+          </div>
+          <div class="resource-row">
+            <span>PM</span>
+            <div class="bar mana"><i id="mana-fill"></i></div>
+            <b id="mana-text">40/40</b>
+          </div>
+        </div>
+      </section>
+
+      <section id="target-card" class="hud-card target-card hidden" aria-live="polite">
+        <div>
+          <strong id="target-name">Gelée des prés</strong>
+          <span id="target-level">Niv. 1</span>
+        </div>
+        <div class="bar health target-health"><i id="target-health-fill"></i></div>
+        <small id="target-health-text">28/28 PV</small>
+      </section>
+
+      <section class="server-card hud-card" aria-label="État du serveur">
+        <span class="status-dot"></span>
+        <div>
+          <strong>Clairière 01</strong>
+          <small>Alpha locale</small>
+        </div>
+        <button id="settings-button" class="icon-button" aria-label="Paramètres">⚙</button>
+      </section>
+
+      <section class="progress-card hud-card" aria-label="Progression">
+        <div class="progress-line">
+          <span>XP</span>
+          <div class="bar xp"><i id="xp-fill"></i></div>
+          <b id="xp-text">0 / 64</b>
+        </div>
+        <div class="progress-line">
+          <span id="job-label">Aventurier</span>
+          <div class="bar job"><i id="job-fill"></i></div>
+          <b id="job-text">0 / 47</b>
+        </div>
+        <div class="gold-line">
+          <img src="./public/assets/ui/gold.png" alt="" />
+          <b id="gold-text">0</b>
+        </div>
+      </section>
+
+      <section class="hotbar" aria-label="Styles de combat">
+        <button class="weapon-button active" data-weapon="staff">
+          <img src="./public/assets/ui/staff.png" alt="" />
+          <span>Bâton</span>
+          <small id="melee-level">Corps niv. 1</small>
+        </button>
+        <button class="weapon-button" data-weapon="sling">
+          <img src="./public/assets/ui/sling.png" alt="" />
+          <span>Lance-pierre</span>
+          <small id="ranged-level">Distance niv. 1</small>
+        </button>
+        <button class="weapon-button" data-weapon="orb">
+          <img src="./public/assets/ui/orb.png" alt="" />
+          <span>Orbe</span>
+          <small id="magic-level">Magie niv. 1</small>
+        </button>
+      </section>
+
+      <section class="action-stack" aria-label="Menus">
+        <button id="inventory-button" class="menu-button">
+          <img src="./public/assets/ui/bag.png" alt="" />
+          <span>Inventaire</span>
+        </button>
+        <button id="stats-button" class="menu-button">
+          <img src="./public/assets/ui/stats.png" alt="" />
+          <span>Stats</span>
+        </button>
+      </section>
+
+      <div id="context-hint" class="context-hint">
+        <span class="sparkle">✦</span>
+        <span id="context-hint-text">Touchez une case pour vous déplacer</span>
+      </div>
+
+      <aside id="side-panel" class="side-panel" aria-hidden="true">
+        <header>
+          <div>
+            <small>Chroniques de Solenne</small>
+            <h2 id="side-panel-title">Inventaire</h2>
+          </div>
+          <button id="side-panel-close" class="close-button" aria-label="Fermer">×</button>
+        </header>
+        <div id="side-panel-content" class="side-panel-content"></div>
+      </aside>
+
+      <div id="dialog-backdrop" class="dialog-backdrop hidden" role="presentation">
+        <section id="dialog" class="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+          <button id="dialog-close" class="close-button dialog-close" aria-label="Fermer">×</button>
+          <div id="dialog-content"></div>
+        </section>
+      </div>
+
+      <div id="toast-container" class="toast-container" aria-live="polite"></div>
+      <div id="loot-feed" class="loot-feed" aria-live="polite"></div>
+      <div class="build-badge">ALPHA 1.1 · BUILD 1.1.0-alpha.1</div>
+    </main>
+
+    <div id="orientation-warning" class="orientation-warning">
+      <img src="./public/assets/ui/icon-192.png" alt="" />
+      <h1>Tournez votre téléphone</h1>
+      <p>Chroniques de Solenne se joue en mode paysage.</p>
+      <span class="phone-rotate">▯ ↻</span>
+    </div>
+
+    <noscript>JavaScript est nécessaire pour jouer.</noscript>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
