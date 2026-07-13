@@ -1,5 +1,11 @@
-.DS_Store
 node_modules/
 .vercel/
-coverage/
-test-results/
+.DS_Store
+*.log
+__pycache__/
+*.pyc
+assets/*.png
+assets/*.json
+dist/
+tests/output/
+tests/*.local.json
