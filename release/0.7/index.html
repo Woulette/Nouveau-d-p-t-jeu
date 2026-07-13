@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1712" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Chroniques de Solenne — Alpha</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+</head>
+<body>
+  <main id="game-shell" aria-label="Chroniques de Solenne">
+    <canvas id="game" aria-label="Monde de jeu"></canvas>
+
+    <section class="panel hud-player" aria-label="État du personnage">
+      <canvas id="portrait" width="72" height="72" aria-hidden="true"></canvas>
+      <div class="hud-main">
+        <div class="hud-title"><strong>Clairière de Solenne</strong><span class="level-chip">Niv. <b id="level-value">1</b></span></div>
+        <div class="identity"><b id="player-name">Voyageur 801</b><span id="class-name">Aventurier</span><span>Rang <b id="class-level-value">1</b></span></div>
+        <div class="resource"><span>PV</span><div class="bar"><i id="hp-bar"></i></div><b id="hp-text">100/100</b></div>
+        <div class="resource"><span>PM</span><div class="bar mana"><i id="mp-bar"></i></div><b id="mp-text">40/40</b></div>
+      </div>
+    </section>
+
+    <section class="panel target-card" id="target-card" aria-live="polite">
+      <div><b id="target-name">Aucune cible</b><span id="target-level"></span></div>
+      <div class="bar enemy"><i id="target-hp-bar"></i></div>
+    </section>
+
+    <section class="panel quest-card" id="quest-card">
+      <small>QUÊTE ACTIVE</small>
+      <b>Premiers pas</b>
+      <span>Vaincre 5 Gelées</span>
+      <strong id="quest-progress">0 / 5</strong>
+    </section>
+
+    <section class="panel minimap-card">
+      <div class="minimap-title">Clairière de Solenne</div>
+      <canvas id="minimap" width="144" height="100"></canvas>
+      <small><i class="status-dot"></i> Mode solo · MMO en préparation</small>
+    </section>
+
+    <button class="panel square-button" id="settings-button" aria-label="Paramètres"><span class="gear"></span></button>
+
+    <section class="panel progress-card">
+      <div class="progress-line"><span>XP</span><div class="bar xp"><i id="xp-bar"></i></div><b id="xp-text">0/100</b></div>
+      <div class="progress-line"><span>Classe</span><div class="bar class"><i id="class-xp-bar"></i></div><b id="class-xp-text">0/100</b></div>
+      <div class="wallet"><canvas class="inline-icon" data-icon="coin" width="18" height="18"></canvas><b id="gold-text">0</b><span>or</span></div>
+    </section>
+
+    <section class="combat-log" id="combat-log" aria-live="polite">
+      <div class="log-tabs"><b>Général</b><span>Groupe</span><span>Annonce</span></div>
+      <div id="log-lines"></div>
+    </section>
+
+    <div class="world-hint" id="world-hint"><span class="spark">✦</span><span>Touchez une case ou un monstre</span></div>
+
+    <nav class="side-actions" aria-label="Menus du personnage">
+      <button class="panel menu-button" id="inventory-button"><canvas data-icon="bag" width="38" height="38"></canvas><span>Inventaire</span><small id="inventory-count">2</small></button>
+      <button class="panel menu-button" id="stats-button"><canvas data-icon="stats" width="38" height="38"></canvas><span>Stats</span></button>
+    </nav>
+
+    <nav class="combat-actions" aria-label="Styles de combat">
+      <button class="panel weapon-button selected" data-weapon="staff"><canvas data-icon="staff" width="48" height="48"></canvas><span>Bâton</span><small>Corps à corps</small></button>
+      <button class="panel weapon-button" data-weapon="sling"><canvas data-icon="sling" width="48" height="48"></canvas><span>Fronde</span><small>Distance</small></button>
+      <button class="panel weapon-button" data-weapon="orb"><canvas data-icon="orb" width="48" height="48"></canvas><span>Magie</span><small>4 PM</small></button>
+      <button class="panel action-button" id="auto-button"><canvas data-icon="attack" width="48" height="48"></canvas><b>ATQ AUTO</b><small>active</small></button>
+      <button class="panel action-button compact" id="potion-button"><canvas data-icon="potion" width="40" height="48"></canvas><b id="potion-count">2</b><small>Potion</small></button>
+    </nav>
+
+    <aside class="drawer" id="drawer" aria-hidden="true">
+      <header><div><small id="drawer-kicker">Personnage</small><h2 id="drawer-title">Statistiques</h2></div><button id="drawer-close" aria-label="Fermer">×</button></header>
+      <div id="drawer-content"></div>
+    </aside>
+    <div class="drawer-backdrop" id="drawer-backdrop"></div>
+
+    <section class="modal" id="settings-modal" aria-hidden="true">
+      <div class="modal-card settings-card">
+        <button class="modal-close" data-close-modal="settings-modal">×</button>
+        <small>CHRONIQUES DE SOLENNE</small><h2>Paramètres</h2>
+        <label><span>Afficher la grille</span><input id="grid-toggle" type="checkbox" /></label>
+        <label><span>Afficher les détails de combat</span><input id="effects-toggle" type="checkbox" checked /></label>
+        <button class="secondary-button" id="reset-save">Réinitialiser la sauvegarde locale</button>
+        <p class="fineprint">Alpha locale. Le serveur MMO autoritaire sera connecté dans une prochaine étape.</p>
+      </div>
+    </section>
+
+    <section class="modal" id="class-modal" aria-hidden="true">
+      <div class="modal-card class-card">
+        <button class="modal-close" data-close-modal="class-modal">×</button>
+        <small>MENTORS DE SOLENNE</small><h2>Choisissez votre voie</h2>
+        <p>Ce choix est permanent. Votre niveau général, vos maîtrises, vos objets et votre équipement restent conservés. La nouvelle classe recommence au rang 1.</p>
+        <div class="class-grid">
+          <button data-class="Épéiste"><span class="mentor-avatar sword"></span><b>Épéiste</b><small>Puissance et défense</small></button>
+          <button data-class="Archer"><span class="mentor-avatar archer"></span><b>Archer</b><small>Portée et précision</small></button>
+          <button data-class="Mage"><span class="mentor-avatar mage"></span><b>Mage</b><small>Magie et mana</small></button>
+        </div>
+        <button class="secondary-button" data-close-modal="class-modal">Plus tard</button>
+      </div>
+    </section>
+
+    <div class="toast" id="toast"></div>
+    <div class="build-badge">ALPHA 0.7 · BUILD TESTÉ</div>
+    <div class="fatal-error" id="fatal-error"><b>Le moteur de jeu a rencontré une erreur.</b><span id="fatal-message"></span></div>
+    <section class="rotate-overlay"><div class="rotate-phone">↻</div><h1>Tournez votre téléphone</h1><p>Chroniques de Solenne se joue en mode paysage.</p></section>
+  </main>
+  <script src="./atlas-data.js"></script>
+  <script src="./runtime-loader.js"></script>
+</body>
+</html>
