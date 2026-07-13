@@ -1,0 +1,98 @@
+name: Validate Chroniques de Solenne foundation
+
+on:
+  push:
+    branches:
+      - develop-consolidation-work
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: solenne-foundation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      PYTHONUNBUFFERED: "1"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements-dev.txt
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install validation dependencies
+        run: |
+          python -m pip install --disable-pip-version-check -r requirements-dev.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Validate source fragments
+        run: npm run check
+
+      - name: Validate deterministic assets
+        run: npm run test:repro
+
+      - name: Build release from repository sources
+        run: npm run build
+
+      - name: Build standalone QA page
+        run: npm run build:standalone
+
+      - name: Run mobile landscape QA
+        run: npm run test:mobile
+
+      - name: Verify generated reports
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          reports = [
+              Path("docs/ASSET_AUDIT.json"),
+              Path("tests/reproducibility-report.json"),
+              Path("tests/static-report.json"),
+              Path("tests/mobile-qa-report.json"),
+          ]
+          failures = []
+          for report_path in reports:
+              data = json.loads(report_path.read_text(encoding="utf-8"))
+              print(f"{report_path}: {data.get('status')}")
+              if data.get("status") != "PASS":
+                  failures.append(str(report_path))
+          if failures:
+              raise SystemExit(f"Rapports en échec : {', '.join(failures)}")
+          PY
+
+      - name: Upload reproducible build and mobile evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: solenne-foundation-validation-${{ github.sha }}
+          path: |
+            dist/
+            docs/ASSET_AUDIT.json
+            tests/reproducibility-report.json
+            tests/static-report.json
+            tests/mobile-qa-report.json
+            tests/output/*.png
+          if-no-files-found: error
+          retention-days: 14
