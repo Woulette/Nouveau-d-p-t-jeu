@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="240" height="96" viewBox="0 0 240 96" shape-rendering="crispEdges">
+<rect width="240" height="96" fill="#000" fill-opacity="0"/>
+<!-- staff -->
+<g transform="translate(0 0)"><path d="M12 39L36 9" stroke="#3a2418" stroke-width="8"/><path d="M13 38L35 10" stroke="#9e6835" stroke-width="5"/><rect x="31" y="6" width="8" height="8" fill="#c28a4a"/><rect x="9" y="36" width="8" height="7" fill="#6d4426"/><path d="M17 31l8 2" stroke="#d6a25a" stroke-width="2"/></g>
+<!-- sling -->
+<g transform="translate(48 0)"><path d="M16 37L11 14M31 37l6-23" stroke="#8c592f" stroke-width="6"/><path d="M12 15c8 6 16 6 24 0" fill="none" stroke="#d7bd82" stroke-width="3"/><rect x="20" y="17" width="8" height="7" rx="2" fill="#6d4930"/><path d="M16 37l7 6M31 37l-7 6" stroke="#55341f" stroke-width="4"/></g>
+<!-- orb -->
+<g transform="translate(96 0)"><circle cx="24" cy="24" r="17" fill="#241b55" stroke="#c184ee" stroke-width="3"/><circle cx="24" cy="24" r="12" fill="#6b38a3"/><circle cx="21" cy="19" r="6" fill="#c07cff"/><circle cx="19" cy="16" r="3" fill="#f4eaff"/><path d="M11 30c7 7 18 8 26 1" fill="none" stroke="#8e53ce" stroke-width="3"/></g>
+<!-- potion -->
+<g transform="translate(144 0)"><rect x="18" y="5" width="12" height="8" fill="#d9c297" stroke="#6d5a3f" stroke-width="2"/><rect x="15" y="12" width="18" height="28" rx="6" fill="#dc5c63" stroke="#71303b" stroke-width="3"/><path d="M17 20h14v15H17z" fill="#ad263e"/><rect x="20" y="16" width="7" height="4" fill="#f4b187"/><rect x="18" y="24" width="4" height="7" fill="#f28e89"/></g>
+<!-- bag -->
+<g transform="translate(192 0)"><path d="M15 14c1-8 17-8 18 0" fill="none" stroke="#a46d37" stroke-width="5"/><path d="M9 16h30l-2 27H11z" fill="#8a572d" stroke="#4e321f" stroke-width="3"/><path d="M12 22h24v17H12z" fill="#a76e38"/><rect x="13" y="26" width="22" height="4" fill="#d19a58"/><rect x="21" y="27" width="7" height="8" fill="#6d4425"/><path d="M16 18l3-7M32 18l-3-7" stroke="#c18a49" stroke-width="3"/></g>
+<!-- coin -->
+<g transform="translate(0 48)"><circle cx="24" cy="24" r="17" fill="#8c5e19"/><circle cx="24" cy="24" r="14" fill="#e1aa28" stroke="#ffe082" stroke-width="3"/><circle cx="24" cy="24" r="8" fill="#c58716"/><path d="M21 16h7l-2 5 3 3-4 8h-6l3-7-3-3z" fill="#ffe38a"/></g>
+<!-- stats -->
+<g transform="translate(48 48)"><rect x="7" y="35" width="34" height="5" fill="#aeb9b0"/><rect x="10" y="24" width="7" height="11" fill="#dce5de"/><rect x="21" y="16" width="7" height="19" fill="#c5d0c8"/><rect x="32" y="8" width="7" height="27" fill="#eef4ef"/><rect x="11" y="26" width="3" height="7" fill="#88958d"/><rect x="22" y="18" width="3" height="15" fill="#88958d"/><rect x="33" y="10" width="3" height="23" fill="#88958d"/></g>
+<!-- settings -->
+<g transform="translate(96 48)"><circle cx="24" cy="24" r="15" fill="#dce4de"/><circle cx="24" cy="24" r="7" fill="#47544d"/><g fill="#dce4de"><rect x="20" y="3" width="8" height="8"/><rect x="20" y="37" width="8" height="8"/><rect x="3" y="20" width="8" height="8"/><rect x="37" y="20" width="8" height="8"/><rect x="8" y="8" width="8" height="8" transform="rotate(45 12 12)"/><rect x="32" y="8" width="8" height="8" transform="rotate(45 36 12)"/><rect x="8" y="32" width="8" height="8" transform="rotate(45 12 36)"/><rect x="32" y="32" width="8" height="8" transform="rotate(45 36 36)"/></g></g>
+<!-- sword -->
+<g transform="translate(144 48)"><path d="M12 39L34 8l6-2-2 7-21 30z" fill="#e5e8e3" stroke="#66747c" stroke-width="2"/><path d="M17 31l7 6" stroke="#d8ae5c" stroke-width="5"/><path d="M11 42l7-8" stroke="#7c4c2b" stroke-width="6"/><rect x="8" y="40" width="8" height="5" fill="#b68445"/></g>
+<!-- bow -->
+<g transform="translate(192 48)"><path d="M14 8c19 8 19 24 0 32" fill="none" stroke="#b47737" stroke-width="5"/><path d="M14 8l2 32" stroke="#e7dbc1" stroke-width="2"/><path d="M16 24h24" stroke="#d8dfe0" stroke-width="3"/><path d="M40 24l-7-5v10z" fill="#d8dfe0"/><rect x="10" y="19" width="8" height="10" fill="#6e4428"/></g>
+</svg>

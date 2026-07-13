@@ -1,0 +1,14 @@
+{
+  "name": "Chroniques de Solenne",
+  "short_name": "Solenne",
+  "description": "Fondation jouable du MMORPG mobile 2D en pixel art.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0a1711",
+  "theme_color": "#0b1813",
+  "icons": [
+    { "src": "./assets/app-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

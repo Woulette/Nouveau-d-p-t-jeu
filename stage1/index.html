@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+  <meta name="theme-color" content="#0b1813">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Chroniques de Solenne — Fondation</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./assets/app-icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css?v=0.8.0-alpha.1">
+</head>
+<body>
+  <main id="game-shell" aria-label="Chroniques de Solenne">
+    <canvas id="game" aria-label="Monde de jeu"></canvas>
+
+    <section class="hud-card player-card" aria-label="État du personnage">
+      <canvas id="portrait" width="64" height="64" aria-hidden="true"></canvas>
+      <div class="player-card__content">
+        <div class="title-line">
+          <strong>Clairière de Solenne</strong>
+          <span class="level-chip">Niv. <b id="general-level">1</b></span>
+        </div>
+        <div class="identity"><b id="player-name">Voyageur 801</b><span id="class-name">Aventurier</span><span>Rang <b id="class-level">1</b></span></div>
+        <div class="resource"><span>PV</span><div class="bar"><i id="hp-bar"></i></div><b id="hp-text">100/100</b></div>
+        <div class="resource"><span>PM</span><div class="bar mana"><i id="mp-bar"></i></div><b id="mp-text">40/40</b></div>
+      </div>
+    </section>
+
+    <section class="target-card" id="target-card" aria-live="polite">
+      <div><b id="target-name">Aucune cible</b><span id="target-level"></span></div>
+      <div class="bar target"><i id="target-hp-bar"></i></div>
+    </section>
+
+    <section class="quest-card hud-card">
+      <small>Quête active</small>
+      <b>Premiers pas</b>
+      <span>Vaincre 5 Gelées vertes</span>
+      <strong id="quest-progress">0 / 5</strong>
+    </section>
+
+    <button class="icon-button settings-button" id="settings-button" aria-label="Paramètres"><canvas width="36" height="36" data-icon="settings"></canvas></button>
+
+    <section class="hud-card progress-card">
+      <div class="progress-row"><span>XP</span><div class="bar"><i id="xp-bar"></i></div><b id="xp-text">0/120</b></div>
+      <div class="progress-row"><span>Classe</span><div class="bar class"><i id="class-xp-bar"></i></div><b id="class-xp-text">0/80</b></div>
+      <div class="currency"><canvas width="20" height="20" data-icon="coin"></canvas><b id="gold-text">0</b><span>or</span></div>
+    </section>
+
+    <div class="world-hint" id="world-hint"><span class="spark"></span><span id="world-hint-text">Touchez une case ou un monstre</span></div>
+
+    <nav class="side-actions" aria-label="Menus du personnage">
+      <button class="menu-button" id="inventory-button"><canvas width="42" height="42" data-icon="bag"></canvas><span>Inventaire</span><small id="inventory-count">2</small></button>
+      <button class="menu-button" id="stats-button"><canvas width="42" height="42" data-icon="stats"></canvas><span>Stats</span></button>
+    </nav>
+
+    <nav class="combat-actions" aria-label="Styles de combat">
+      <button class="weapon-button selected" data-weapon="staff"><canvas width="48" height="48" data-icon="staff"></canvas><span>Bâton</span><small>Corps à corps</small></button>
+      <button class="weapon-button" data-weapon="sling"><canvas width="48" height="48" data-icon="sling"></canvas><span>Fronde</span><small>Distance</small></button>
+      <button class="weapon-button" data-weapon="orb"><canvas width="48" height="48" data-icon="orb"></canvas><span>Orbe</span><small>Magie</small></button>
+      <button class="action-button" id="potion-button"><canvas width="44" height="44" data-icon="potion"></canvas><b id="potion-count">2</b><small>Potions</small></button>
+    </nav>
+
+    <aside class="drawer" id="drawer" aria-hidden="true">
+      <header><div><small id="drawer-kicker">Personnage</small><h2 id="drawer-title">Statistiques</h2></div><button id="drawer-close" aria-label="Fermer">×</button></header>
+      <div id="drawer-content" class="drawer-content"></div>
+    </aside>
+    <div class="drawer-backdrop" id="drawer-backdrop"></div>
+
+    <section class="modal" id="mentor-modal" aria-hidden="true">
+      <div class="modal-card">
+        <small>Mentors de Solenne</small>
+        <h2>Choisissez votre voie</h2>
+        <p>Ce choix est permanent. Votre niveau général, vos maîtrises et vos objets sont conservés. La nouvelle classe recommence au rang 1.</p>
+        <div class="class-grid">
+          <button data-class="Épéiste"><canvas width="64" height="64" data-icon="sword"></canvas><b>Épéiste</b><small>Puissance et résistance</small></button>
+          <button data-class="Archer"><canvas width="64" height="64" data-icon="bow"></canvas><b>Archer</b><small>Portée et précision</small></button>
+          <button data-class="Mage"><canvas width="64" height="64" data-icon="orb"></canvas><b>Mage</b><small>Sorts et maîtrise du mana</small></button>
+        </div>
+        <button class="secondary-button" id="mentor-cancel">Plus tard</button>
+      </div>
+    </section>
+
+    <section class="rotate-overlay"><div class="phone-shape"></div><h1>Tournez votre téléphone</h1><p>Chroniques de Solenne se joue en mode paysage.</p></section>
+    <div class="build-badge">FONDATION · 0.8.0-alpha.1</div>
+    <div class="fatal-error" id="fatal-error"><b>Le moteur n’a pas pu démarrer.</b><span id="fatal-message"></span></div>
+  </main>
+  <script type="module" src="./src/game.js?v=0.8.0-alpha.1"></script>
+</body>
+</html>

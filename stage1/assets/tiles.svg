@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="64" viewBox="0 0 256 64" shape-rendering="crispEdges">
+<rect width="256" height="64" fill="#000" fill-opacity="0"/>
+<!-- herbe 1 -->
+<g transform="translate(0 0)"><rect width="32" height="32" fill="#5d963f"/><path d="M0 8h32M0 20h32M8 0v32M21 0v32" stroke="#6aa64a" stroke-opacity=".25"/><rect x="4" y="5" width="2" height="2" fill="#79b755"/><rect x="23" y="9" width="3" height="1" fill="#3f7d35"/><rect x="13" y="25" width="2" height="2" fill="#78b254"/><rect x="27" y="27" width="2" height="1" fill="#477f37"/></g>
+<!-- herbe 2 -->
+<g transform="translate(32 0)"><rect width="32" height="32" fill="#639c43"/><rect x="2" y="7" width="2" height="1" fill="#457e36"/><rect x="7" y="18" width="1" height="3" fill="#7bb657"/><rect x="18" y="5" width="3" height="1" fill="#79b253"/><rect x="25" y="22" width="2" height="2" fill="#3d7531"/><path d="M11 29l2-4 1 4M28 12l1-3 1 3" stroke="#457f35"/></g>
+<!-- chemin -->
+<g transform="translate(64 0)"><rect width="32" height="32" fill="#a98658"/><rect x="1" y="3" width="5" height="2" fill="#b99868"/><rect x="18" y="6" width="6" height="2" fill="#8e704a"/><rect x="7" y="17" width="4" height="2" fill="#8f7149"/><rect x="23" y="25" width="5" height="2" fill="#b89a6b"/><rect x="13" y="28" width="2" height="2" fill="#765d3f"/><path d="M0 10h32M0 23h32" stroke="#c0a271" stroke-opacity=".25"/></g>
+<!-- terre -->
+<g transform="translate(96 0)"><rect width="32" height="32" fill="#84663e"/><rect x="3" y="6" width="4" height="2" fill="#6e5335"/><rect x="13" y="14" width="3" height="2" fill="#a17d4b"/><rect x="24" y="8" width="2" height="3" fill="#6a4f34"/><rect x="20" y="26" width="6" height="2" fill="#9a7548"/></g>
+<!-- eau -->
+<g transform="translate(128 0)"><rect width="32" height="32" fill="#3b7f8d"/><path d="M2 7h9M16 4h12M6 17h14M22 23h8M1 28h12" stroke="#69a9ad" stroke-width="2"/><path d="M10 11h12M0 21h8M17 29h10" stroke="#286b7a"/></g>
+<!-- pierre -->
+<g transform="translate(160 0)"><rect width="32" height="32" fill="#777a6b"/><path d="M0 10h11l4-10M15 0l4 13h13M0 23h8l5 9M13 32l4-12 15 3" fill="none" stroke="#5d6258" stroke-width="2"/><path d="M2 8h7M19 11h10M17 22h7" stroke="#939586"/></g>
+<!-- prairie fleurie -->
+<g transform="translate(192 0)"><rect width="32" height="32" fill="#5f983f"/><g fill="#fff4d3"><rect x="5" y="8" width="2" height="2"/><rect x="3" y="10" width="2" height="2"/><rect x="7" y="10" width="2" height="2"/><rect x="22" y="22" width="2" height="2"/><rect x="20" y="24" width="2" height="2"/><rect x="24" y="24" width="2" height="2"/></g><g fill="#e6b949"><rect x="5" y="10" width="2" height="2"/><rect x="22" y="24" width="2" height="2"/></g><path d="M6 12v5M23 26v4" stroke="#347330"/></g>
+<!-- hautes herbes -->
+<g transform="translate(224 0)"><rect width="32" height="32" fill="#5b913c"/><path d="M5 27L3 17m4 10 2-14m1 14 5-12m2 12-1-17m4 17 5-15m0 15 4-10" stroke="#2f6b2e" stroke-width="2"/><path d="M7 27l-1-8m7 8 2-7m6 7-1-9m6 9 2-6" stroke="#78b44d"/></g>
+<!-- seconde rangée -->
+<g transform="translate(0 32)"><rect width="32" height="32" fill="#57903a"/><rect x="5" y="12" width="3" height="2" fill="#73ae4d"/><rect x="20" y="4" width="2" height="2" fill="#39732f"/><rect x="25" y="25" width="3" height="1" fill="#6fa94b"/><path d="M12 30l1-5 2 5" stroke="#3c7731"/></g>
+<g transform="translate(32 32)"><rect width="32" height="32" fill="#a98658"/><path d="M0 0h7l4 4h11l4-4h6v32H0z" fill="#a98658"/><path d="M2 2h5l4 4h11l4-4h4" stroke="#d0b17b" stroke-width="2"/><rect x="8" y="17" width="5" height="2" fill="#80623f"/><rect x="22" y="25" width="4" height="2" fill="#c09c68"/></g>
+<g transform="translate(64 32)"><rect width="32" height="32" fill="#6aa34a"/><rect x="4" y="4" width="1" height="1" fill="#8bc263"/><rect x="14" y="11" width="2" height="1" fill="#4b8339"/><rect x="27" y="17" width="2" height="2" fill="#86bd5d"/><rect x="8" y="27" width="3" height="1" fill="#477d36"/></g>
+<g transform="translate(96 32)"><rect width="32" height="32" fill="#b49b69"/><path d="M0 7h32M0 18h32M0 29h32" stroke="#c7ae7a"/><rect x="5" y="10" width="4" height="2" fill="#9d8354"/><rect x="21" y="23" width="6" height="2" fill="#92794f"/></g>
+<g transform="translate(128 32)"><rect width="32" height="32" fill="#337886"/><path d="M0 5h13M18 9h13M4 18h20M15 27h16" stroke="#65a9ad" stroke-width="2"/><path d="M7 12h13M0 24h10" stroke="#246775"/></g>
+<g transform="translate(160 32)"><rect width="32" height="32" fill="#666b60"/><rect x="2" y="2" width="12" height="12" fill="#7d8173"/><rect x="17" y="3" width="13" height="9" fill="#555b52"/><rect x="4" y="17" width="9" height="13" fill="#565c53"/><rect x="16" y="15" width="14" height="15" fill="#7b7f71"/><path d="M2 14h28M14 0v32" stroke="#454b45"/></g>
+<g transform="translate(192 32)"><rect width="32" height="32" fill="#5d963f"/><g fill="#8b61c3"><rect x="6" y="7" width="3" height="3"/><rect x="9" y="10" width="3" height="3"/><rect x="22" y="18" width="3" height="3"/></g><g fill="#e98299"><rect x="17" y="5" width="3" height="3"/><rect x="4" y="24" width="3" height="3"/></g><path d="M8 12v6M23 21v6M18 8v5M5 27v3" stroke="#347330"/></g>
+<g transform="translate(224 32)"><rect width="32" height="32" fill="#5c923d"/><path d="M4 28l1-8 2 8m4 0 1-13 3 13m4 0-2-11 5 11m3 0 3-14 1 14" stroke="#285f29" stroke-width="2"/><rect x="7" y="8" width="2" height="2" fill="#d7c14d"/><rect x="25" y="6" width="2" height="2" fill="#d88445"/></g>
+</svg>
