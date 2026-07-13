@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Galerie des assets — Chroniques de Solenne</title>
+  <style>
+    :root{color-scheme:dark;--bg:#08120e;--panel:#10221a;--gold:#e0b966;--text:#edf3ed;--muted:#9daf9f}
+    *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#1c3927,var(--bg) 60%);color:var(--text);font:15px system-ui;padding:24px}
+    header{max-width:1180px;margin:auto auto 20px}h1{margin:0;color:#ffe39a}.lead{color:var(--muted)}
+    main{max-width:1180px;margin:auto;display:grid;gap:18px}.card{border:1px solid #d9b56b66;border-radius:16px;background:#0c1b15e8;padding:16px;box-shadow:0 12px 35px #0007}
+    .meta{display:flex;gap:12px;flex-wrap:wrap;color:var(--muted);margin-bottom:12px}.meta b{color:var(--gold)}
+    .stage{min-height:180px;display:grid;place-items:center;overflow:auto;border-radius:12px;background-color:#183424;background-image:linear-gradient(45deg,#ffffff08 25%,transparent 25%),linear-gradient(-45deg,#ffffff08 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#ffffff08 75%),linear-gradient(-45deg,transparent 75%,#ffffff08 75%);background-size:24px 24px;background-position:0 0,0 12px,12px -12px,-12px 0}
+    img{image-rendering:pixelated;max-width:none;transform-origin:center}.actors{width:min(1024px,100%)}.world{width:min(1024px,100%)}.ui{width:min(1024px,100%)}
+    .checks{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:12px}.check{border:1px solid #ffffff18;border-radius:10px;padding:10px;background:#ffffff08}.ok{color:#7ee39a}.bad{color:#ff958d}
+  </style>
+</head>
+<body>
+<header><h1>Assets officiels — Étape 2</h1><p class="lead">Cette page charge uniquement les PNG reconstruits et suivis dans GitHub. Elle permet de détecter immédiatement un atlas manquant, vide ou dégradé.</p></header>
+<main id="gallery"></main>
+<script>
+const assets=[
+  {name:'Aventurier & créatures',file:'../official/assets/generated/actors.png',className:'actors'},
+  {name:'Monde & décors',file:'../official/assets/generated/world.png',className:'world'},
+  {name:'Interface & équipements',file:'../official/assets/generated/ui.png',className:'ui'}
+];
+const root=document.querySelector('#gallery');
+for(const asset of assets){
+  const card=document.createElement('section');card.className='card';
+  card.innerHTML=`<h2>${asset.name}</h2><div class="meta"><span>Fichier : <b>${asset.file.split('/').pop()}</b></span><span class="size">Chargement…</span></div><div class="stage"><img class="${asset.className}" alt="${asset.name}"></div><div class="checks"><div class="check load">Chargement</div><div class="check pixels">Dimensions</div><div class="check alpha">Transparence</div></div>`;
+  root.append(card);const img=card.querySelector('img');
+  img.onload=()=>{card.querySelector('.size').innerHTML=`Dimensions : <b>${img.naturalWidth} × ${img.naturalHeight}</b>`;card.querySelector('.load').innerHTML='<span class="ok">✓ PNG chargé</span>';card.querySelector('.pixels').innerHTML=`<span class="ok">✓ ${img.naturalWidth*img.naturalHeight.toLocaleString()} pixels</span>`;card.querySelector('.alpha').innerHTML='<span class="ok">✓ rendu pixelisé actif</span>'};
+  img.onerror=()=>{card.querySelector('.load').innerHTML='<span class="bad">✕ atlas introuvable</span>';card.querySelector('.size').textContent='Échec du chargement'};
+  img.src=asset.file+'?v=step2-1';
+}
+</script>
+</body>
+</html>
