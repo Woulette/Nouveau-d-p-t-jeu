@@ -1,0 +1,101 @@
+      const button=event.target.closest('[data-equip]'); if(button) equipItem(button.dataset.equip);
+    });
+  }
+
+  function openDrawer() { ui.drawer.classList.add('open'); ui.drawerBackdrop.classList.add('open'); ui.drawer.setAttribute('aria-hidden','false'); }
+  function closeDrawer() { ui.drawer.classList.remove('open'); ui.drawerBackdrop.classList.remove('open'); ui.drawer.setAttribute('aria-hidden','true'); }
+  function openModal(modal) { modal.classList.add('open'); modal.setAttribute('aria-hidden','false'); }
+  function closeModal(modal) { modal.classList.remove('open'); modal.setAttribute('aria-hidden','true'); }
+
+  function rarityLabel(rarity) { return { common:'Commun',uncommon:'Inhabituel',rare:'Rare' }[rarity] || rarity; }
+  function iconCanvasHtml(icon, size=42) { return `<canvas width="48" height="48" data-dynamic-icon="${icon}" style="width:${size}px;height:${size}px;image-rendering:pixelated"></canvas>`; }
+  function drawDynamicIcons(root=ui.drawerContent) {
+    $$('canvas[data-dynamic-icon]',root).forEach(c=>{
+      const index=UI_ICON[c.dataset.dynamicIcon]??UI_ICON.bag, g=c.getContext('2d');g.imageSmoothingEnabled=false;g.drawImage(game.assets.ui,index*48,0,48,48,0,0,48,48);
+    });
+  }
+
+  function openStats() {
+    ui.drawerKicker.textContent='Progression du personnage'; ui.drawerTitle.textContent='Statistiques';
+    const masteries=game.state.masteries;
+    const labels={melee:'Corps à corps',ranged:'Distance',magic:'Magie',defense:'Défense'};
+    const cards=Object.entries(masteries).map(([name,m])=>{
+      const needed=masteryXpNeeded(m.level), bonus=equipmentStats()[name]||0;
+      return `<article class="stat-card"><small>${labels[name]}</small><strong>${m.level}${bonus?` <em>+${bonus}</em>`:''}</strong><span>${m.xp}/${needed} XP</span><div class="mini-progress"><i style="width:${clamp(m.xp/needed*100,0,100)}%"></i></div></article>`;
+    }).join('');
+    ui.drawerContent.innerHTML=`<div class="stat-grid">${cards}<article class="stat-card"><small>Vitesse</small><strong>${playerSpeed()}</strong><span>+1 par niveau général</span></article><article class="stat-card"><small>Défense effective</small><strong>${defenseValue()}</strong><span>Maîtrise + équipement</span></article></div><h3 class="section-title">Progression</h3><div class="equipment-card"><span>Niveau général</span><b>${game.state.player.level}</b></div><div class="equipment-card"><span>${game.state.player.className}</span><b>Rang ${game.state.player.classLevel}</b></div><div class="equipment-card"><span>Prochaine évolution</span><b>${game.state.player.className==='Aventurier'?'Mentor au rang 20':'Voie avancée au rang 50'}</b></div>`;
+    openDrawer();
+  }
+
+  function openInventory() {
+    ui.drawerKicker.textContent='Sac et équipement'; ui.drawerTitle.textContent='Inventaire';
+    const slots={head:'Tête',feet:'Pieds',charm:'Charme',ring:'Anneau'};
+    const equipHtml=Object.entries(slots).map(([slot,label])=>{
+      const itemId=game.state.equipment[slot]; return `<div class="equipment-card"><span>${label}</span><b>${itemId?ITEMS[itemId].name:'Vide'}</b></div>`;
+    }).join('');
+    const items=Object.entries(game.state.inventory).filter(([,count])=>count>0).map(([itemId,count])=>{
+      const item=ITEMS[itemId]; if(!item)return'';
+      const action=item.type==='equipment'?`<button data-equip="${itemId}">Équiper</button>`:`<span>x${count}</span>`;
+      return `<article class="inventory-item rarity-${item.rarity}">${iconCanvasHtml(item.icon)}<div><b>${item.name} ×${count}</b><small>${rarityLabel(item.rarity)} · ${item.description}</small></div>${action}</article>`;
+    }).join('')||'<p>Votre sac est vide.</p>';
+    ui.drawerContent.innerHTML=`<h3 class="section-title">Équipement</h3>${equipHtml}<h3 class="section-title">Objets</h3>${items}`;
+    drawDynamicIcons(); openDrawer();
+  }
+
+  function toast(message,type='') {
+    const el=document.createElement('div');el.className=`toast ${type}`;el.textContent=message;ui.toastStack.appendChild(el);setTimeout(()=>el.remove(),2900);
+  }
+
+  function syncUi(force=false) {
+    if (!force && !game.uiDirty) return;
+    game.uiDirty=false;
+    const p=game.state.player, player=game.player;
+    const hpMax=maxHp(), mpMax=maxMp(), xpNeed=generalXpNeeded(p.level), classNeed=classXpNeeded(p.classLevel);
+    ui.zoneName.textContent=game.zoneName;ui.playerName.textContent=p.name;ui.className.textContent=p.className;
+    ui.generalLevel.textContent=p.level;ui.classLevel.textContent=p.classLevel;
+    ui.hpBar.style.width=`${clamp(player.hp/hpMax*100,0,100)}%`;ui.hpText.textContent=`${Math.ceil(player.hp)}/${hpMax}`;
+    ui.mpBar.style.width=`${clamp(player.mp/mpMax*100,0,100)}%`;ui.mpText.textContent=`${Math.floor(player.mp)}/${mpMax}`;
+    ui.xpBar.style.width=`${clamp(p.xp/xpNeed*100,0,100)}%`;ui.xpText.textContent=`${p.xp}/${xpNeed}`;
+    ui.classXpBar.style.width=`${clamp(p.classXp/classNeed*100,0,100)}%`;ui.classXpText.textContent=`${p.classXp}/${classNeed}`;
+    ui.gold.textContent=p.gold;ui.potionCount.textContent=game.state.inventory.potion||0;
+    ui.inventoryCount.textContent=Object.values(game.state.inventory).reduce((sum,n)=>sum+n,0);
+    $$('.weapon-button').forEach(button=>button.classList.toggle('selected',button.dataset.weapon===p.weapon));
+    const target=selectedMonster();
+    ui.targetCard.classList.toggle('visible',Boolean(target));
+    if(target){ui.targetName.textContent=MONSTER_DEFS[target.type].name;ui.targetLevel.textContent=`Niv. ${target.level}`;ui.targetHp.style.width=`${clamp(target.hp/target.maxHp*100,0,100)}%`;}
+    else {ui.targetName.textContent='Aucune cible';ui.targetLevel.textContent='';ui.targetHp.style.width='0%';}
+    ui.effectsToggle.checked=game.state.settings.effects;ui.gridToggle.checked=game.state.settings.grid;
+  }
+
+  async function boot() {
+    resize();
+    await loadAssets();
+    initWorld();
+    requestAnimationFrame(loop);
+    if (!EMBEDDED && 'serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(console.warn);
+  }
+
+  window.__SOLENNE__ = {
+    build: BUILD,
+    get state() { return game.state; },
+    get player() { return game.player; },
+    get monsters() { return game.monsters; },
+    get camera() { return game.camera; },
+    get viewport() { return game.viewport; },
+    snapshot() {
+      const player = deepClone(game.state.player);
+      if (game.player) { player.x=game.player.x; player.y=game.player.y; player.hp=Math.ceil(game.player.hp); player.mp=Math.floor(game.player.mp); }
+      return { build:BUILD,player,masteries:deepClone(game.state.masteries),inventory:deepClone(game.state.inventory),selected:game.selectedMonsterId,ready:game.ready };
+    },
+    test: {
+      teleport(x,y){if(isWalkable(x,y)){Object.assign(game.player,makeMover(x,y));syncUi(true);}},
+      setClassLevel(level){game.state.player.classLevel=level;game.state.player.classXp=0;syncUi(true);},
+      damagePlayer(amount){damagePlayer(amount);},
+      killSelected(){const m=selectedMonster();if(m)killMonster(m);},
+      grantItem(id,count=1){game.state.inventory[id]=(game.state.inventory[id]||0)+count;syncUi(true);},
+      clearSave(){localStorage.removeItem(SAVE_KEY);}
+    }
+  };
+
+  boot().catch(fatal);
+})();
