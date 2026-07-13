@@ -1,0 +1,160 @@
+(() => {
+  'use strict';
+
+  const BUILD = '1.1.0-foundation.1';
+  const TILE = 32;
+  const SAVE_KEY = 'chroniques-solenne-save-v1';
+  const $ = (selector, root = document) => root.querySelector(selector);
+  const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+  const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const manhattan = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+  const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const key = (x, y) => `${x},${y}`;
+  const deepClone = (value) => JSON.parse(JSON.stringify(value));
+  const now = () => performance.now() / 1000;
+  const randomInt = (a, b) => Math.floor(a + Math.random() * (b - a + 1));
+
+  const canvas = $('#game');
+  const ctx = canvas.getContext('2d', { alpha: false });
+  ctx.imageSmoothingEnabled = false;
+
+  const ui = {
+    loading: $('#loading-screen'), loadingLabel: $('#loading-label'), loadingProgress: $('#loading-progress'),
+    zoneName: $('#zone-name'), portrait: $('#portrait'), playerName: $('#player-name'), className: $('#class-name'),
+    generalLevel: $('#general-level'), classLevel: $('#class-level'), hpBar: $('#hp-bar'), hpText: $('#hp-text'),
+    mpBar: $('#mp-bar'), mpText: $('#mp-text'), xpBar: $('#xp-bar'), xpText: $('#xp-text'),
+    classXpBar: $('#class-xp-bar'), classXpText: $('#class-xp-text'), gold: $('#gold-text'),
+    targetCard: $('#target-card'), targetName: $('#target-name'), targetLevel: $('#target-level'), targetHp: $('#target-hp-bar'),
+    worldHint: $('#world-hint-text'), inventoryCount: $('#inventory-count'), potionCount: $('#potion-count'),
+    drawer: $('#drawer'), drawerBackdrop: $('#drawer-backdrop'), drawerTitle: $('#drawer-title'), drawerKicker: $('#drawer-kicker'), drawerContent: $('#drawer-content'),
+    classModal: $('#class-modal'), settingsModal: $('#settings-modal'), toastStack: $('#toast-stack'),
+    deathVignette: $('#death-vignette'), effectsToggle: $('#effects-toggle'), gridToggle: $('#grid-toggle'),
+    fatal: $('#fatal-error'), fatalMessage: $('#fatal-message')
+  };
+
+  const HERO_STATES = {
+    idle: { start: 0, count: 4, fps: 3.2, loop: true },
+    walk: { start: 4, count: 6, fps: 9.5, loop: true },
+    staff: { start: 10, count: 6, fps: 12, loop: false },
+    sling: { start: 16, count: 6, fps: 11, loop: false },
+    cast: { start: 22, count: 6, fps: 11, loop: false },
+    hit: { start: 28, count: 3, fps: 9, loop: false },
+    death: { start: 31, count: 6, fps: 8, loop: false }
+  };
+  const HERO_DIR = { up: 0, left: 1, right: 2, down: 3 };
+  const MONSTER_STATES = {
+    idle: { start: 0, count: 4, fps: 3, loop: true },
+    walk: { start: 4, count: 4, fps: 7, loop: true },
+    attack: { start: 8, count: 6, fps: 10, loop: false },
+    hit: { start: 14, count: 3, fps: 9, loop: false },
+    death: { start: 17, count: 6, fps: 8, loop: false }
+  };
+  const MONSTER_ROW = { slime: 0, rat: 1, boar: 2, wolf: 3, wisp: 4 };
+  const UI_ICON = { staff: 0, sling: 1, orb: 2, bag: 3, stats: 4, potion: 5, coin: 6, settings: 7, sword: 8, archer: 9, mage: 10, boots: 11 };
+  const EFFECT_FRAME = { hit: [0, 6], stone: [6, 4], magic: [10, 8], level: [18, 8], heal: [26, 6] };
+
+  const WEAPONS = {
+    staff: { label: 'Bâton', state: 'staff', mastery: 'melee', range: 1.2, cooldown: 0.86, mana: 0, projectile: null, baseDamage: 7, hitAt: 0.30 },
+    sling: { label: 'Fronde', state: 'sling', mastery: 'ranged', range: 5.2, cooldown: 1.08, mana: 0, projectile: 'stone', baseDamage: 6, hitAt: 0.39 },
+    orb: { label: 'Orbe', state: 'cast', mastery: 'magic', range: 5.6, cooldown: 1.18, mana: 4, projectile: 'magic', baseDamage: 8, hitAt: 0.40 }
+  };
+
+  const MONSTER_DEFS = {
+    slime: { name: 'Gelée des prés', hp: 34, damage: 3, speed: 76, attackRate: 1.45, xp: 22, classXp: 14, gold: [2, 7], aggro: 4.6 },
+    rat: { name: 'Rat des chemins', hp: 42, damage: 4, speed: 92, attackRate: 1.25, xp: 28, classXp: 17, gold: [3, 9], aggro: 5.2 },
+    boar: { name: 'Sanglier brun', hp: 68, damage: 7, speed: 84, attackRate: 1.55, xp: 44, classXp: 25, gold: [5, 13], aggro: 5.5 },
+    wolf: { name: 'Loup des lisières', hp: 82, damage: 9, speed: 110, attackRate: 1.18, xp: 58, classXp: 32, gold: [7, 17], aggro: 6.2 },
+    wisp: { name: 'Feu follet', hp: 74, damage: 8, speed: 98, attackRate: 1.35, xp: 62, classXp: 36, gold: [8, 19], aggro: 6.6 }
+  };
+
+  const ITEMS = {
+    potion: { id: 'potion', name: 'Potion rouge', description: 'Rend 45 PV.', icon: 'potion', type: 'consumable', rarity: 'common' },
+    hide: { id: 'hide', name: 'Peau robuste', description: 'Matériau récupéré sur les bêtes.', icon: 'bag', type: 'material', rarity: 'common' },
+    slimeGel: { id: 'slimeGel', name: 'Gelée lumineuse', description: 'Un composant légèrement magique.', icon: 'orb', type: 'material', rarity: 'uncommon' },
+    wornBoots: { id: 'wornBoots', name: 'Bottes de voyage', description: '+2 défense. Un équipement simple mais fiable.', icon: 'boots', type: 'equipment', slot: 'feet', stats: { defense: 2 }, rarity: 'uncommon' },
+    forestCharm: { id: 'forestCharm', name: 'Charme forestier', description: '+2 magie et +5 PM.', icon: 'orb', type: 'equipment', slot: 'charm', stats: { magic: 2, maxMp: 5 }, rarity: 'rare' },
+    hunterBand: { id: 'hunterBand', name: 'Bandeau du chasseur', description: '+2 distance et +1 défense.', icon: 'sling', type: 'equipment', slot: 'head', stats: { ranged: 2, defense: 1 }, rarity: 'rare' },
+    oakRing: { id: 'oakRing', name: 'Anneau de chêne', description: '+2 corps à corps et +8 PV.', icon: 'staff', type: 'equipment', slot: 'ring', stats: { melee: 2, maxHp: 8 }, rarity: 'rare' }
+  };
+
+  const DEFAULT_SAVE = {
+    version: 1,
+    player: {
+      name: 'Voyageur 801', x: 24, y: 22, level: 1, xp: 0, className: 'Aventurier', classLevel: 1, classXp: 0,
+      hp: 100, baseMaxHp: 100, mp: 40, baseMaxMp: 40, gold: 0, weapon: 'staff', village: 'Village de Solenne'
+    },
+    masteries: {
+      melee: { level: 1, xp: 0 }, ranged: { level: 1, xp: 0 }, magic: { level: 1, xp: 0 }, defense: { level: 1, xp: 0 }
+    },
+    inventory: { potion: 2 },
+    equipment: { head: null, feet: null, charm: null, ring: null },
+    settings: { effects: true, grid: false },
+    classChoiceLocked: false,
+    discoveredVillages: ['Village de Solenne']
+  };
+
+  const EMBEDDED = window.__SOLENNE_EMBEDDED__ || null;
+  const assetUrl = (name, fallback) => EMBEDDED?.[name] || fallback;
+
+  const game = {
+    ready: false,
+    assets: {},
+    map: null,
+    blocked: new Set(),
+    state: loadSave(),
+    player: null,
+    monsters: [],
+    projectiles: [],
+    effects: [],
+    floaters: [],
+    camera: { x: 0, y: 0, targetX: 0, targetY: 0 },
+    viewport: { w: innerWidth, h: innerHeight, dpr: Math.min(devicePixelRatio || 1, 2) },
+    selectedMonsterId: null,
+    lastTime: performance.now(),
+    uiDirty: true,
+    autosaveAt: 0,
+    zoneName: 'Clairière de Solenne',
+    debug: new URLSearchParams(location.search).has('debug')
+  };
+
+  function fatal(error) {
+    console.error(error);
+    ui.fatalMessage.textContent = String(error?.stack || error?.message || error || 'Erreur inconnue');
+    ui.fatal.classList.add('show');
+  }
+  window.addEventListener('error', event => fatal(event.error || event.message));
+  window.addEventListener('unhandledrejection', event => fatal(event.reason));
+
+  function loadSave() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return deepClone(DEFAULT_SAVE);
+      const parsed = JSON.parse(raw);
+      const save = deepClone(DEFAULT_SAVE);
+      Object.assign(save.player, parsed.player || {});
+      Object.assign(save.masteries, parsed.masteries || {});
+      Object.assign(save.inventory, parsed.inventory || {});
+      Object.assign(save.equipment, parsed.equipment || {});
+      Object.assign(save.settings, parsed.settings || {});
+      save.classChoiceLocked = Boolean(parsed.classChoiceLocked);
+      save.discoveredVillages = Array.isArray(parsed.discoveredVillages) ? parsed.discoveredVillages : ['Village de Solenne'];
+      return save;
+    } catch (error) {
+      console.warn('Sauvegarde illisible, réinitialisation.', error);
+      return deepClone(DEFAULT_SAVE);
+    }
+  }
+
+  function saveGame() {
+    try {
+      if (game.player) {
+        game.state.player.x = game.player.x;
+        game.state.player.y = game.player.y;
+        game.state.player.hp = Math.ceil(game.player.hp);
+        game.state.player.mp = Math.floor(game.player.mp);
+      }
+      localStorage.setItem(SAVE_KEY, JSON.stringify(game.state));
+    } catch (error) {
+      console.warn('Sauvegarde impossible', error);
+    }
