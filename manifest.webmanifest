@@ -1,0 +1,10 @@
+{
+  "name": "Chroniques de Solenne",
+  "short_name": "Solenne",
+  "start_url": "/",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#0a1712",
+  "theme_color": "#0e1b17",
+  "description": "MMORPG mobile 2D en pixel art."
+}
