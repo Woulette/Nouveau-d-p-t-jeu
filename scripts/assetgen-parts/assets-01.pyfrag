@@ -1,0 +1,140 @@
+def draw_tree(base: Image.Image, overlay: Image.Image, cx: int, cy: int, variant: int, seed: int):
+    """cx,cy are pixel coordinates at trunk foot."""
+    db = ImageDraw.Draw(base); do = ImageDraw.Draw(overlay)
+    r = random.Random(seed)
+    # soft pixel shadow and trunk on base
+    ell(db, (cx - 22, cy - 10, cx + 22, cy + 8), "#19371f66")
+    rect(db, (cx - 6, cy - 42, cx + 7, cy), "#5a3522", PAL["outline2"])
+    rect(db, (cx - 3, cy - 40, cx + 1, cy - 3), "#8c5730")
+    rect(db, (cx + 3, cy - 35, cx + 6, cy - 5), "#3f281d")
+    # canopy on overlay, made of overlapping pixel clusters
+    if variant == 2:
+        colors = ["#97613c", "#c47a43", "#d7a24a", "#6e4732"]
+    else:
+        colors = [PAL["leaf_sh"], PAL["leaf"], PAL["leaf_hi"], PAL["leaf_light"]]
+    blobs = [(-20,-65,24), (2,-72,25), (20,-57,22), (-5,-45,26), (-29,-48,19), (26,-40,18)]
+    for i,(ox,oy,rad) in enumerate(blobs):
+        c = colors[(i + variant) % len(colors)]
+        ell(do, (cx + ox-rad, cy+oy-rad, cx+ox+rad, cy+oy+rad), c, PAL["outline2"])
+    # blocky shadow pockets and highlights
+    for _ in range(18):
+        x = cx + r.randrange(-37, 37); y = cy + r.randrange(-88, -28)
+        c = r.choice([colors[0], colors[2], colors[-1]])
+        rect(do, (x, y, x + r.randrange(3, 8), y + r.randrange(2, 5)), c)
+    # red berries on some trees
+    if variant == 1:
+        for ox,oy in [(-26,-52),(18,-66),(10,-37)]:
+            rect(do,(cx+ox,cy+oy,cx+ox+3,cy+oy+3),"#b53f3f")
+            rect(do,(cx+ox,cy+oy,cx+ox+1,cy+oy+1),"#f0875f")
+
+
+def draw_bush(base: Image.Image, cx: int, cy: int, flowering=False, seed=0):
+    d=ImageDraw.Draw(base); r=random.Random(seed)
+    ell(d,(cx-17,cy-15,cx+17,cy+10),"#2c6631",PAL["outline2"])
+    ell(d,(cx-13,cy-20,cx+3,cy+3),"#4b913c")
+    ell(d,(cx-1,cy-18,cx+16,cy+5),"#5aa543")
+    for _ in range(9):
+        x=cx+r.randrange(-13,14); y=cy+r.randrange(-15,6)
+        rect(d,(x,y,x+3,y+2),r.choice(["#75ba50","#397c35","#89c25a"]))
+    if flowering:
+        for ox,oy,c in [(-9,-6,"#ef80a5"),(6,-12,"#c56be6"),(10,1,"#ffdf64")]:
+            rect(d,(cx+ox-2,cy+oy,cx+ox+2,cy+oy+2),c)
+            rect(d,(cx+ox,cy+oy-2,cx+ox+1,cy+oy+4),c)
+
+
+def draw_rock(base: Image.Image, cx: int, cy: int, large=False):
+    d=ImageDraw.Draw(base)
+    w,h=(44,32) if large else (28,22)
+    pts=[(cx-w//2,cy),(cx-w//2+5,cy-h+7),(cx-5,cy-h),(cx+w//2-6,cy-h+6),(cx+w//2,cy-3),(cx+w//2-5,cy+4),(cx-w//2+3,cy+4)]
+    poly(d,pts,PAL["stone_sh"],PAL["outline2"])
+    poly(d,[(cx-w//2+6,cy-h+8),(cx-4,cy-h+2),(cx+2,cy-6),(cx-w//2+1,cy-3)],PAL["stone"])
+    poly(d,[(cx-3,cy-h+2),(cx+w//2-7,cy-h+7),(cx+w//2-2,cy-5),(cx+3,cy-6)],PAL["stone_hi"])
+    line(d,[(cx-2,cy-h+3),(cx+2,cy-7)],"#484d43",2)
+
+
+def draw_flowers(base: Image.Image, cx: int, cy: int, colors: Iterable[str]):
+    d=ImageDraw.Draw(base)
+    for i,c in enumerate(colors):
+        ox=(-8,0,8,4,-4)[i%5]; oy=(2,-5,1,6,7)[i%5]
+        line(d,[(cx+ox,cy+oy+5),(cx+ox,cy+oy+10)],"#2e6b31",1)
+        rect(d,(cx+ox-2,cy+oy,cx+ox+2,cy+oy+3),c)
+        rect(d,(cx+ox,cy+oy-2,cx+ox+1,cy+oy+5),c)
+        rect(d,(cx+ox,cy+oy+1,cx+ox+1,cy+oy+2),"#ffe67c")
+
+
+def draw_sign(base: Image.Image,cx:int,cy:int):
+    d=ImageDraw.Draw(base)
+    ell(d,(cx-14,cy-2,cx+14,cy+6),"#142c1b55")
+    rect(d,(cx-3,cy-29,cx+3,cy),"#4b2e1f",PAL["outline2"])
+    rect(d,(cx-17,cy-38,cx+17,cy-19),"#8b552d",PAL["outline2"])
+    rect(d,(cx-13,cy-34,cx+13,cy-30),"#b77a3f")
+    line(d,[(cx-10,cy-25),(cx+7,cy-25)],"#5a3522",2)
+
+
+def draw_lamp(base: Image.Image,cx:int,cy:int):
+    d=ImageDraw.Draw(base)
+    ell(d,(cx-11,cy-3,cx+11,cy+5),"#10261955")
+    rect(d,(cx-3,cy-46,cx+3,cy),"#28322d",PAL["outline"])
+    rect(d,(cx-7,cy-49,cx+7,cy-43),"#4c554d",PAL["outline"])
+    line(d,[(cx,cy-47),(cx+16,cy-59),(cx+22,cy-57)],"#2d312e",4)
+    rect(d,(cx+17,cy-63,cx+28,cy-48),"#2c322e",PAL["outline"])
+    rect(d,(cx+20,cy-60,cx+25,cy-51),"#ffd56b")
+    rect(d,(cx+21,cy-59,cx+23,cy-53),"#fff1a3")
+
+
+def draw_fence(base: Image.Image,cx:int,cy:int,length:int=3,horizontal=True):
+    d=ImageDraw.Draw(base)
+    if horizontal:
+        for i in range(length+1):
+            x=cx+i*24
+            rect(d,(x-3,cy-16,x+3,cy+3),"#6b4127",PAL["outline2"])
+            rect(d,(x-2,cy-14,x+1,cy-2),"#a36a38")
+        rect(d,(cx,cy-12,cx+length*24,cy-7),"#80502d",PAL["outline2"])
+        rect(d,(cx,cy-4,cx+length*24,cy+1),"#6f4328",PAL["outline2"])
+    else:
+        for i in range(length+1):
+            y=cy-i*18
+            rect(d,(cx-3,y-12,cx+3,y+3),"#6b4127",PAL["outline2"])
+        line(d,[(cx,cy),(cx,cy-length*18)],"#9a6033",5)
+
+
+def draw_house(base: Image.Image, overlay: Image.Image,cx:int,cy:int,style:int=0):
+    db=ImageDraw.Draw(base); do=ImageDraw.Draw(overlay)
+    # cx center, cy footprint bottom
+    w=112; h=88
+    ell(db,(cx-55,cy-9,cx+55,cy+10),"#132b1b55")
+    rect(db,(cx-w//2,cy-h,cx+w//2,cy),"#c6aa78",PAL["outline2"],2)
+    # plaster texture
+    for ox,oy in [(-44,-74),(-15,-68),(27,-72),(-38,-34),(35,-28)]:
+        rect(db,(cx+ox,cy+oy,cx+ox+6,cy+oy+3),"#d9c08d")
+    # door and window
+    rect(db,(cx-13,cy-39,cx+15,cy),"#6a3b24",PAL["outline"])
+    rect(db,(cx-8,cy-33,cx+10,cy),"#8a5230")
+    rect(db,(cx+4,cy-18,cx+7,cy-15),"#e8c76b")
+    rect(db,(cx-43,cy-55,cx-20,cy-32),"#315d68",PAL["outline"])
+    rect(db,(cx-39,cy-51,cx-24,cy-36),"#8ed0cf")
+    line(db,[(cx-31,cy-51),(cx-31,cy-36)],"#31525a",2)
+    line(db,[(cx-39,cy-44),(cx-24,cy-44)],"#31525a",2)
+    # roof goes to overlay for depth
+    roof = "#8c3f2f" if style==0 else "#6f4a2f"
+    roof_hi = "#bd5d3f" if style==0 else "#9a6840"
+    poly(do,[(cx-65,cy-h+8),(cx,cy-h-42),(cx+65,cy-h+8)],roof,PAL["outline2"])
+    poly(do,[(cx-52,cy-h+3),(cx,cy-h-31),(cx+52,cy-h+3)],roof_hi)
+    for yy in range(cy-h-16,cy-h+5,8):
+        line(do,[(cx-45+(yy-(cy-h))*1,yy),(cx+45-(yy-(cy-h))*1,yy)],"#703226",2)
+    rect(do,(cx-7,cy-h-38,cx+7,cy-h-26),"#663829")
+
+
+def draw_well(base:Image.Image,cx:int,cy:int):
+    d=ImageDraw.Draw(base)
+    ell(d,(cx-26,cy-12,cx+26,cy+9),"#11261855")
+    ell(d,(cx-22,cy-18,cx+22,cy+4),"#777b6b",PAL["outline2"])
+    ell(d,(cx-16,cy-13,cx+16,cy),"#172a2b")
+    rect(d,(cx-24,cy-52,cx-19,cy-6),"#5c3925",PAL["outline2"])
+    rect(d,(cx+19,cy-52,cx+24,cy-6),"#5c3925",PAL["outline2"])
+    poly(d,[(cx-30,cy-48),(cx,cy-68),(cx+30,cy-48)],"#8f432f",PAL["outline2"])
+    rect(d,(cx-3,cy-45,cx+3,cy-19),"#6b452a")
+
+
+def draw_mentor_crystal(base:Image.Image,cx:int,cy:int):
+    d=ImageDraw.Draw(base)
