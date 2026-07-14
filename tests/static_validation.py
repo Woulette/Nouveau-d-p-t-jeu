@@ -54,6 +54,13 @@ def main() -> None:
     if 'class-confirmation' not in html:
         errors.append("confirmation permanente de classe absente")
 
+    vercel_config = json.loads((ROOT / "vercel.json").read_text(encoding="utf-8"))
+    vercel_guard = ROOT / "scripts" / "verify_vercel_release.js"
+    if vercel_config.get("buildCommand") != "node scripts/verify_vercel_release.js":
+        errors.append("commande de validation Vercel inattendue")
+    if not vercel_guard.exists() or "release.sourceBranch !== 'main'" not in vercel_guard.read_text(encoding="utf-8"):
+        errors.append("garde de release Vercel absente")
+
     report = {
         "version": VERSION,
         "status": "PASS" if not errors else "FAIL",

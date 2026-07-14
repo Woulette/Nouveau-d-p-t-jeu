@@ -51,7 +51,7 @@ Les contrôles navigateur ont validé sans erreur console :
 - le choix de classe permanent, sa sauvegarde et le verrouillage d’un second choix ;
 - des cibles tactiles d’au moins 44 px, un rail d’armes à gauche et aucun chevauchement majeur du HUD.
 
-Le workflow GitHub `Validate Chroniques de Solenne` doit encore confirmer le même scénario avec l’environnement Playwright officiel après le push.
+Le workflow GitHub `Validate Chroniques de Solenne` a confirmé le même scénario dans l’environnement Playwright officiel sur le PR `develop` → `main`. Sources, assets, build, page autonome, QA mobile et rapports sont tous passés.
 
 ## Production historique et sortie `public/`
 
@@ -63,7 +63,9 @@ La dernière version de production historiquement validée reste `1.1.0-foundati
 
 Cible unique attendue : `chroniques-de-solenne`, URL historique `https://chroniques-de-solenne.vercel.app`.
 
-Lors de la vérification du 14 juillet 2026, le connecteur Vercel de l’équipe **Bigot's projects** ne voit pas ce projet et l’accès direct par identifiant renvoie « introuvable ». Le seul autre projet visible est hors périmètre et ne doit jamais être inspecté, modifié ou redéployé.
+Lors de la vérification du 14 juillet 2026, le bot Vercel du PR GitHub confirme que l’intégration du dépôt cible bien le projet historique `chroniques-de-solenne`. Le connecteur Vercel de l’équipe **Bigot's projects** ne voit cependant toujours pas ce projet et l’accès direct par son identifiant exact renvoie « introuvable ». Le seul autre projet visible est hors périmètre et ne doit jamais être inspecté, modifié ou redéployé.
+
+Le premier preview a aussi révélé que l’ancien `buildCommand` dépassait la limite Vercel de 256 caractères. La vérification a été déplacée dans `scripts/verify_vercel_release.js` : elle refuse toute sortie dont la version, la validation, la branche ou les fichiers essentiels ne correspondent pas à la release attendue.
 
 Conséquences :
 
@@ -74,9 +76,8 @@ Conséquences :
 
 ## Prochaine action sûre
 
-1. pousser le commit candidat sur `develop` ;
-2. attendre le workflow GitHub de validation et corriger tout échec ;
-3. rendre le projet Vercel historique visible/reconnecté sans toucher à un autre projet ;
-4. fusionner dans `main` seulement après validation ;
-5. attendre la génération automatique de `public/` ;
-6. vérifier le déploiement et rejouer la QA distante.
+1. rendre le projet Vercel historique visible/reconnecté sans toucher à un autre projet ;
+2. vérifier son nom, son équipe, son identifiant, la branche et le domaine ;
+3. fusionner le PR validé dans `main` seulement après cette vérification ;
+4. attendre la génération automatique de `public/` ;
+5. vérifier le déploiement et rejouer la QA distante.

@@ -544,16 +544,18 @@ Date de passation : **2026-07-14**.
 - QA mobile présente : `docs/MOBILE_QA.json`.
 - Le candidat corrige la poursuite et les réservations, réduit l’échelle du monde, place les armes à gauche, ajoute l’Ours et le Sylvain et finalise les trois choix de classe au rang 20.
 - Les assets actuels sont générés de façon déterministe en PNG au build et leurs URLs sont révisionnées pour éviter un mélange de cache entre releases.
+- Le workflow GitHub officiel a validé sources, assets, build, page autonome, scénarios mobiles et rapports sur le PR `develop` → `main`.
 
 ### Vercel
 
 - Cible unique obligatoire : `chroniques-de-solenne`.
-- Lors de la dernière vérification par connecteur, le projet officiel n’était pas visible dans la liste, tandis qu’un autre projet sans rapport avec le jeu était visible.
-- Conséquence : la liaison ou la création officielle Vercel doit être re-vérifiée. Ne pas considérer la production comme acquise et ne pas créer une série de projets de test.
+- Le bot Vercel du PR GitHub confirme la liaison historique exacte à `chroniques-de-solenne`, mais le connecteur Vercel ne permet toujours pas d’ouvrir ce projet, même avec son identifiant.
+- `vercel.json` utilise un script de garde court compatible avec la limite de 256 caractères et refuse une sortie `public/` ancienne ou non validée.
+- Conséquence : l’accès au projet officiel doit être restauré ou reconnecté avant la production. Ne pas considérer la production comme acquise et ne créer aucun projet de test.
 
 ### Jalon courant
 
-Le candidat local `1.2.0-alpha.1` est validé par build et Chromium. Il doit encore passer le workflow GitHub sur son commit exact. La publication reste bloquée tant que l’unique projet Vercel officiel n’est pas de nouveau visible, puis elle devra être vérifiée sur l’URL distante.
+Le candidat `1.2.0-alpha.1` sur `develop` est validé localement et par le workflow GitHub officiel. La publication reste bloquée tant que l’unique projet Vercel officiel n’est pas de nouveau visible, puis elle devra être vérifiée sur l’URL distante.
 
 ---
 
@@ -566,11 +568,10 @@ Le prochain assistant doit effectuer, dans cet ordre :
 3. Exécuter ou revalider les scripts de build, audit, reproductibilité et QA mobile.
 4. Vérifier que les PNG générés correspondent aux manifestes et ne sont pas des placeholders.
 5. Comparer la capture 896×414 à la référence visuelle de l’utilisateur.
-6. Pousser le candidat sur `develop` sans toucher à `main` tant que la validation et la cible Vercel ne sont pas complètes.
-7. Vérifier ou restaurer la visibilité du seul projet Vercel `chroniques-de-solenne`.
-8. Fusionner dans `main`, attendre la sortie `public/` validée, puis tester l’URL distante.
-9. Donner à l’utilisateur une preuve : commit, branche, capture mobile, rapports et déploiement exact.
-10. Continuer ensuite l’étape 2 sur `develop`, sans simplifier les vrais assets ou animations.
+6. Vérifier ou restaurer la visibilité du seul projet Vercel `chroniques-de-solenne`.
+7. Fusionner dans `main`, attendre la sortie `public/` validée, puis tester l’URL distante.
+8. Donner à l’utilisateur une preuve : commit, branche, capture mobile, rapports et déploiement exact.
+9. Continuer ensuite l’étape 2 sur `develop`, sans simplifier les vrais assets ou animations.
 
 ---
 
