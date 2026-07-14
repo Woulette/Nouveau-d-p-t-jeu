@@ -1,9 +1,8 @@
-name: Validate Chroniques de Solenne foundation
+name: Validate Chroniques de Solenne
 
 on:
   push:
     branches:
-      - develop-consolidation-work
       - develop
   pull_request:
     branches:

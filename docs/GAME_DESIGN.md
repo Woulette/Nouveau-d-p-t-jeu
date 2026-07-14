@@ -1,55 +1,48 @@
 # Cahier des charges validé — Chroniques de Solenne
 
-## Vision
+## Vision et commandes
 
-MMORPG mobile 2D en pixel art, inspiré dans son rythme et sa lisibilité par les MMORPG mobiles sur grille, mais avec un univers, des cartes, des personnages, des monstres et une interface entièrement originaux.
+MMORPG mobile 2D en pixel art original, joué en paysage sans joystick. Toucher une case calcule un chemin sur la grille. Toucher un monstre le cible, approche le joueur à la bonne portée et lance les attaques automatiques.
 
-## Plateforme et commandes
-
-- Téléphone en mode paysage.
-- Aucun joystick.
-- Monde sur grille.
-- Toucher une case calcule un chemin et déplace le personnage case par case.
-- Toucher un monstre le cible, rapproche automatiquement le joueur à la bonne portée puis lance les attaques automatiques.
+Pendant une poursuite, joueur et monstre recalculent leur route depuis leur case engagée actuelle. Leurs cases de départ et de destination sont réservées : deux acteurs ne peuvent pas les utiliser simultanément. Une attaque ne part que depuis une position stabilisée.
 
 ## Progressions
 
-- Niveau général 1 au départ ; XP attribuée à la mort des monstres.
-- Aventurier rang 1 au départ ; XP de classe attribuée à la mort des monstres.
-- Vitesse de base 100 ; chaque niveau général gagné ajoute 1.
-- Corps à corps, distance et magie gagnent de l’XP à chaque attaque valide.
-- Défense gagne de l’XP à chaque attaque réellement reçue.
-- Les maîtrises ne sont jamais partagées dans un groupe et sont conservées lors d’une évolution de classe.
+- niveau général 1 au départ, vitesse 100 puis +1 par niveau ;
+- Aventurier rang 1 au départ ;
+- XP générale et de classe à la mort des monstres ;
+- maîtrises corps à corps, distance et magie à chaque attaque valide ;
+- maîtrise Défense à chaque coup reçu ;
+- niveau général, maîtrises, inventaire et équipement conservés lors d’une évolution.
 
-## Équipement initial
+## Styles initiaux
 
-- Bâton : corps à corps.
-- Fronde : attaque à distance.
-- Orbe : boule magique consommant des PM.
+- Bâton : corps à corps ;
+- Fronde : distance ;
+- Orbe : magie consommant des PM.
+
+Les trois styles restent utilisables après le choix de classe.
 
 ## Classes
 
-Au rang Aventurier 20, interaction avec le cristal des mentors :
+L’Aventurier est plafonné au rang 20 ; son XP de classe reste à zéro jusqu’au choix confirmé auprès du mentor :
 
-- Épéiste rang 1 ;
-- Archer rang 1 ;
-- Mage rang 1.
+- **Épéiste** rang 1 : +12 PV et +12 % de dégâts au bâton ;
+- **Archer** rang 1 : +12 % de dégâts à la fronde et +0,6 de portée ;
+- **Mage** rang 1 : +12 PM et +12 % de dégâts à l’orbe.
 
-Le choix est permanent. Le niveau général, les maîtrises, l’inventaire et l’équipement sont conservés. Une évolution avancée sera proposée plus tard, par exemple Mage vers Nécromancien.
+Le choix est permanent et sauvegardé. Une évolution avancée sera conçue plus tard.
 
 ## Monstres et récompenses
 
-Les monstres accordent XP générale, XP de classe et or à leur mort. Ils peuvent aussi donner des consommables, des matériaux et parfois un équipement. En groupe, seule l’XP de mort sera partagée ; les maîtrises resteront personnelles.
+Les monstres donnent XP générale, XP de classe et or, avec une chance de butin. L’Ours de Solenne apparaît aux niveaux 6 et 8 ; le Sylvain épineux au niveau 7. Ils possèdent davantage de PV, de dégâts et de récompenses que les cinq familles initiales.
 
-## Mort
+## Mort et interface
 
-Le personnage réapparaît au village enregistré, sans perte de niveau, de maîtrise ou d’objet dans la première version.
+Le personnage réapparaît sur une case libre du village enregistré, sans perte de progression dans la première version.
 
-## Direction artistique verrouillée
+L’interface place les trois styles sur le bord gauche, l’inventaire et les statistiques à droite, la potion en bas à droite, et conserve le centre pour le monde.
 
-- Pixel art fantasy chaleureux et détaillé.
-- Tuiles variées, fleurs, herbes, arbres, buissons, rochers, chemins, lampadaires, barrières et bâtiments.
-- Interface sombre avec contours dorés.
-- Atlas PNG réels et animations visibles.
-- Aucun emoji utilisé comme asset final.
-- Aucun écran vert vide, rectangle de remplacement ou suppression d’animation ne peut être publié sur `main`.
+## Direction artistique
+
+Pixel art fantasy chaleureux, atlas PNG réels, animations visibles, terrain varié et interface sombre dorée. Aucun emoji, écran vide, rectangle de remplacement ou retrait d’animation ne peut être publié sur `main`.

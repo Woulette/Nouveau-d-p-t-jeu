@@ -1,23 +1,79 @@
 {
-  "version":"1.1.0-foundation.1",
-  "status":"PASS",
-  "outputDirectory":"dist",
-  "fileCount":14,
-  "totalBytes":538897,
-  "files":[
-    {"path":"assets/atlas.json","bytes":587,"sha256":"0d9e9869371232e09f6d2e1f9861d3d79c04d6235894f902bfd407d88dbb977b"},
-    {"path":"assets/effects.png","bytes":3831,"sha256":"afab2907b0f2f1550aef213f3ce6ed8462be06a90621a1e8682d5d340d0039ef"},
-    {"path":"assets/hero.png","bytes":20981,"sha256":"07bafdbf2bc61d0e367427a3558ec6ced5491eddf9f79e4c6337e1fdb1022a73"},
-    {"path":"assets/map-base.png","bytes":318459,"sha256":"ec284371f74d7f888411cfdc7b3c056ed3d62fe2a7294125252f494e43817d06"},
-    {"path":"assets/map-data.json","bytes":4103,"sha256":"379a22bb9baa36da1a5f00ce76217f145ff028415063352501e883f8e30facbc"},
-    {"path":"assets/map-overlay.png","bytes":100637,"sha256":"e9646f8c8eb7a957512a9101c874dc06bb6075fed7303e3520863a3120f37f64"},
-    {"path":"assets/monsters.png","bytes":10401,"sha256":"8a8a20d3e9bcf1b784d4114f8f685b8c11b9340b4946776fc2a014f9dadc5e00"},
-    {"path":"assets/portrait.png","bytes":699,"sha256":"47586118ad8b10b61ac0b3f2811199375c43c954df6d7ee866a20a86f7be02e1"},
-    {"path":"assets/ui.png","bytes":3302,"sha256":"a81ed16bd7617c5c0b188253fa04bb0a8ce1ccf13d98ac0dbc0c58531819f13e"},
-    {"path":"index.html","bytes":6704,"sha256":"e8d794520c4aa3155933dc42057ee5b6ca07f4b5a31b271663b2712682a920a6"},
-    {"path":"manifest.webmanifest","bytes":398,"sha256":"08b7608a47540fb47319fc342971b3b3d810b4dc2ee7819ff64f55156f75fced"},
-    {"path":"src/game.js","bytes":52167,"sha256":"4f0853e2304980078f5688c3d257f9ba18a41b979183bf9c3af19f715331488c"},
-    {"path":"styles.css","bytes":15681,"sha256":"269326df5807ab392afea6b3005dbb04f5fe0e8c6cf27e26ee7580f47d65fe39"},
-    {"path":"sw.js","bytes":947,"sha256":"eaf545c2a9938e942bed41d705db46be09b36403dfa1ea75093b54f33c67048b"}
+  "version": "1.2.0-alpha.1",
+  "status": "PASS",
+  "outputDirectory": "dist",
+  "fileCount": 14,
+  "totalBytes": 556014,
+  "files": [
+    {
+      "path": "assets/atlas.json",
+      "bytes": 603,
+      "sha256": "ddf87ca479bf2c5b31f832680ffb26e54edbc4590a988685dc2fc6d624b8e74d"
+    },
+    {
+      "path": "assets/effects.png",
+      "bytes": 3831,
+      "sha256": "afab2907b0f2f1550aef213f3ce6ed8462be06a90621a1e8682d5d340d0039ef"
+    },
+    {
+      "path": "assets/hero.png",
+      "bytes": 20981,
+      "sha256": "07bafdbf2bc61d0e367427a3558ec6ced5491eddf9f79e4c6337e1fdb1022a73"
+    },
+    {
+      "path": "assets/map-base.png",
+      "bytes": 318459,
+      "sha256": "ec284371f74d7f888411cfdc7b3c056ed3d62fe2a7294125252f494e43817d06"
+    },
+    {
+      "path": "assets/map-data.json",
+      "bytes": 4225,
+      "sha256": "100f7aabb0e1f9c9dc5497899d9e47cd90d5474843de44b68846ff11f1f3eec3"
+    },
+    {
+      "path": "assets/map-overlay.png",
+      "bytes": 100637,
+      "sha256": "e9646f8c8eb7a957512a9101c874dc06bb6075fed7303e3520863a3120f37f64"
+    },
+    {
+      "path": "assets/monsters.png",
+      "bytes": 15606,
+      "sha256": "717cd8f2fc5953c1f9cfda64d6b370ae3de5e43b1b26b3b5a0402ed9fa6d71db"
+    },
+    {
+      "path": "assets/portrait.png",
+      "bytes": 699,
+      "sha256": "47586118ad8b10b61ac0b3f2811199375c43c954df6d7ee866a20a86f7be02e1"
+    },
+    {
+      "path": "assets/ui.png",
+      "bytes": 3302,
+      "sha256": "a81ed16bd7617c5c0b188253fa04bb0a8ce1ccf13d98ac0dbc0c58531819f13e"
+    },
+    {
+      "path": "index.html",
+      "bytes": 7317,
+      "sha256": "02d426817cab77a161cc0ae140f5b177380967d799af8c302c46df8f69b96c6f"
+    },
+    {
+      "path": "manifest.webmanifest",
+      "bytes": 398,
+      "sha256": "08b7608a47540fb47319fc342971b3b3d810b4dc2ee7819ff64f55156f75fced"
+    },
+    {
+      "path": "src/game.js",
+      "bytes": 61997,
+      "sha256": "981fba50b948b285f5bfeea10ebfa77de7c967fdd0e931569b0998cc793d245d"
+    },
+    {
+      "path": "styles.css",
+      "bytes": 16841,
+      "sha256": "e76d9fdc40f40be77c8c464fc1999f3186d27a76f1f422baa29a474b06169f90"
+    },
+    {
+      "path": "sw.js",
+      "bytes": 1118,
+      "sha256": "5a8dd6f135755f792a8c93b2c30cf46d3ae437e7bdb194b12aefe5bf60e97710"
+    }
   ]
 }

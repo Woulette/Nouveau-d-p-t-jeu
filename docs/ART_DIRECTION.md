@@ -2,55 +2,36 @@
 
 ## Référence visuelle
 
-Le jeu doit conserver une lecture proche d’un MMORPG mobile 2D haut de gamme : vue du dessus, pixel art chaleureux, densité végétale importante et interface sombre à accents dorés.
-
-La référence sert uniquement à définir le niveau de finition et la lisibilité. Aucun sprite, aucune carte et aucune interface ne doivent être copiés.
+Le jeu vise la lecture d’un MMORPG mobile 2D haut de gamme : vue du dessus, pixel art chaleureux, végétation dense et interface sombre à accents dorés. La référence fixe le niveau de finition et de lisibilité ; aucun sprite, décor ou écran n’est copié.
 
 ## Règles obligatoires
 
-- assets originaux stockés dans le dépôt ;
-- aucune icône emoji dans la version jouable ;
-- aucun personnage composé de rectangles temporaires en production ;
+- assets originaux et vrais atlas PNG ;
+- aucune icône emoji ni placeholder dans la version jouable ;
 - aucune régression d’animation ;
-- déplacement logique case par case, mais interpolation visuelle fluide ;
-- personnage lisible au centre malgré une carte détaillée ;
-- ombres cohérentes sous les personnages, monstres, arbres et bâtiments ;
-- plusieurs variantes d’herbe, fleurs, buissons, rochers et arbres ;
-- bâtiments et décors possédant volume, matière et éclairage ;
-- interface paysage sombre, dorée, tactile et compatible avec les zones sûres des téléphones.
+- mouvement logique sur grille et interpolation visuelle fluide ;
+- ombres cohérentes et silhouettes lisibles à petite taille ;
+- variations d’herbe, fleurs, buissons, rochers, arbres et bâtiments ;
+- monde riche sans masquer le personnage ni les zones de combat.
 
-## Aventurier
+## Échelle et interface mobile
 
-Animations minimales dans quatre directions :
+- monde rendu à 75 % pour afficher plus de terrain ;
+- cibles tactiles d’au moins 44 px ;
+- bâton, fronde et orbe en rail vertical à l’extrême gauche ;
+- inventaire et statistiques à droite ;
+- potion séparée en bas à droite ;
+- centre de l’écran réservé au monde et aux combats ;
+- compatibilité avec les zones sûres et les quatre formats paysage officiels.
 
-1. repos ;
-2. marche ;
-3. attaque au bâton ;
-4. tir au lance-pierre ;
-5. lancement magique ;
-6. réception d’un coup ;
-7. mort.
+## Animations minimales
 
-Les pieds doivent rester ancrés sur la grille et l’équipement doit suivre les mouvements des mains.
+L’Aventurier possède repos, marche, bâton, fronde, magie, dégâts et mort dans quatre directions.
 
-## Monstres
+Chaque famille de monstre possède repos, marche, attaque, dégâts et mort. Familles actuelles : Gelée des prés, Rat des chemins, Sanglier brun, Loup des lisières, Feu follet, Ours de Solenne et Sylvain épineux.
 
-Chaque famille possède : repos, marche, attaque, dégâts et mort. Les silhouettes doivent être distinctes à petite taille.
+## Décors et publication
 
-Premières familles : Gelée verte, Rat, Sanglier, Loup et Feu follet.
+La Clairière contient des bordures forestières, chemins, maisons, puits, panneaux, clôtures, lampadaires, rochers, fleurs, hautes herbes et zones de combat dégagées.
 
-## Décors
-
-La Clairière de Solenne doit contenir :
-
-- bordures forestières denses ;
-- chemins de terre irréguliers ;
-- village ou camp de départ ;
-- maison, puits, panneaux, clôtures et lampadaires ;
-- rochers de plusieurs tailles ;
-- fleurs et hautes herbes distribuées sans répétition visible ;
-- zones de combat dégagées au milieu d’un environnement riche.
-
-## Critère de publication
-
-Une capture de la nouvelle version doit être comparée à la capture stable précédente. Une modification qui retire des détails, des animations ou de la lisibilité ne peut pas être fusionnée dans `main`.
+Avant toute fusion dans `main`, une capture 896×414 doit être comparée à la référence et à la meilleure version précédente. Une modification qui retire des détails, des animations ou de la lisibilité est refusée.

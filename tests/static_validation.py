@@ -8,7 +8,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "dist"
 REPORT = ROOT / "tests" / "static-report.json"
-VERSION = "1.1.0-foundation.1"
+VERSION = "1.2.0-alpha.1"
 
 
 def main() -> None:
@@ -31,6 +31,8 @@ def main() -> None:
 
     if VERSION not in html or VERSION not in js:
         errors.append("numéro de build incohérent")
+    if "revisionedAsset('./assets/map-data.json')" not in js or "assetUrl('monsters','./assets/monsters.png')" not in js:
+        errors.append("assets de production non révisionnés")
     if "/mnt/data" in combined or "file://" in combined:
         errors.append("dépendance vers un chemin temporaire")
     if "🪵" in combined or "🪨" in combined or "🔵" in combined or "🎒" in combined:
@@ -43,6 +45,14 @@ def main() -> None:
     for rule in ["generalXpNeeded", "classXpNeeded", "masteryXpNeeded", "playerSpeed"]:
         if rule not in js:
             errors.append(f"règle de progression absente: {rule}")
+    for rule in ["WORLD_SCALE", "committedTile", "ensureChasePath", "entityReservesTile", "CLASS_DEFS", "weaponRange"]:
+        if rule not in js:
+            errors.append(f"règle de moteur absente: {rule}")
+    for monster_type in ["bear", "treant"]:
+        if monster_type not in js:
+            errors.append(f"nouveau monstre absent: {monster_type}")
+    if 'class-confirmation' not in html:
+        errors.append("confirmation permanente de classe absente")
 
     report = {
         "version": VERSION,
@@ -54,7 +64,9 @@ def main() -> None:
         "errors": errors,
     }
     REPORT.parent.mkdir(parents=True, exist_ok=True)
-    REPORT.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    payload = json.dumps(report, ensure_ascii=False, indent=2)
+    REPORT.write_text(payload, encoding="utf-8")
+    (ROOT / "docs" / "STATIC_VALIDATION.json").write_text(payload + "\n", encoding="utf-8")
     print(json.dumps(report, ensure_ascii=False, indent=2))
     if errors:
         raise SystemExit(1)

@@ -87,6 +87,9 @@ def draw_map():
             {"type":"slime","x":35,"y":29,"level":2},
             {"type":"rat","x":29,"y":25,"level":2},
             {"type":"wolf","x":53,"y":29,"level":5},
+            {"type":"bear","x":44,"y":34,"level":6},
+            {"type":"treant","x":52,"y":34,"level":7},
+            {"type":"bear","x":59,"y":33,"level":8},
         ]
     }
     base.save(ASSETS/"map-base.png",optimize=True)

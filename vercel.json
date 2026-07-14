@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "",
-  "buildCommand": "test -s public/index.html && test -s public/src/game.js && test -s public/assets/hero.png && echo 'Validated Chroniques de Solenne static release ready'",
+  "buildCommand": "node -e \"const p=require('./package.json');const r=require('./public/vercel-release.json');if(r.version!==p.version||r.validation!=='PASS')throw new Error('public release does not match validated source')\" && test -s public/index.html && test -s public/src/game.js && test -s public/assets/hero.png && echo 'Validated Chroniques de Solenne static release ready'",
   "outputDirectory": "public",
   "cleanUrls": true,
   "headers": [

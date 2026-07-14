@@ -27,13 +27,15 @@ def main() -> None:
     second = hashes()
     changed = [name for name in TARGETS if first[name] != second[name]]
     report = {
-        "version": "1.1.0-foundation.1",
+        "version": "1.2.0-alpha.1",
         "status": "PASS" if not changed else "FAIL",
         "generatedFiles": len(TARGETS),
         "changed": changed,
         "hashes": second,
     }
-    REPORT.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    payload = json.dumps(report, indent=2)
+    REPORT.write_text(payload, encoding="utf-8")
+    (ROOT / "docs" / "REPRODUCIBILITY.json").write_text(payload + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2))
     if changed:
         raise SystemExit(1)

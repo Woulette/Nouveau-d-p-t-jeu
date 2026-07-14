@@ -8,7 +8,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "dist"
-VERSION = "1.1.0-foundation.1"
+VERSION = "1.2.0-alpha.1"
 
 
 def digest(path: Path) -> str:
@@ -66,7 +66,9 @@ def main() -> None:
         "totalBytes": sum(item["bytes"] for item in files),
         "files": files,
     }
-    (DIST / "build-report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
+    payload = json.dumps(report, indent=2)
+    (DIST / "build-report.json").write_text(payload, encoding="utf-8")
+    (ROOT / "docs" / "BUILD_REPORT.json").write_text(payload + "\n", encoding="utf-8")
     print(json.dumps(report, indent=2))
 
 

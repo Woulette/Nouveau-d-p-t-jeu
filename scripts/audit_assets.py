@@ -12,7 +12,7 @@ REPORT = ROOT / "docs" / "ASSET_AUDIT.json"
 
 EXPECTED = {
     "hero.png": (1184, 192),
-    "monsters.png": (1104, 240),
+    "monsters.png": (1104, 336),
     "ui.png": (576, 48),
     "effects.png": (1536, 48),
     "portrait.png": (96, 96),
@@ -74,14 +74,50 @@ def main() -> None:
         })
 
     atlas = json.loads((ASSETS / "atlas.json").read_text(encoding="utf-8")) if (ASSETS / "atlas.json").exists() else {}
+    map_data = json.loads((ASSETS / "map-data.json").read_text(encoding="utf-8")) if (ASSETS / "map-data.json").exists() else {}
+    monster_types = set(atlas.get("monsters", {}).get("types", []))
+    blocked = {tuple(tile) for tile in map_data.get("blocked", [])}
+    width, height = map_data.get("width", 0), map_data.get("height", 0)
+    for spawn in map_data.get("monsterSpawns", []):
+        position = (spawn.get("x"), spawn.get("y"))
+        if spawn.get("type") not in monster_types:
+            errors.append(f"type de spawn sans atlas: {spawn.get('type')}")
+        if position in blocked or not (0 <= position[0] < width and 0 <= position[1] < height):
+            errors.append(f"spawn de monstre invalide: {spawn}")
+    for required_type in {"bear", "treant"}:
+        if required_type not in monster_types:
+            errors.append(f"famille de monstre absente de l’atlas: {required_type}")
+    edge_safe_frames = 0
+    monster_type_list = atlas.get("monsters", {}).get("types", [])
+    monster_frame = atlas.get("monsters", {}).get("frame", 0)
+    monster_path = ASSETS / "monsters.png"
+    if monster_path.exists() and monster_frame == 48:
+        with Image.open(monster_path) as monster_image:
+            alpha = monster_image.convert("RGBA").getchannel("A")
+            columns = monster_image.width // monster_frame
+            for monster_type in ("bear", "treant"):
+                if monster_type not in monster_type_list:
+                    continue
+                row = monster_type_list.index(monster_type)
+                for column in range(columns):
+                    frame = alpha.crop((column * 48, row * 48, (column + 1) * 48, (row + 1) * 48))
+                    borders = [
+                        frame.crop((0, 0, 48, 1)), frame.crop((0, 47, 48, 48)),
+                        frame.crop((0, 0, 1, 48)), frame.crop((47, 0, 48, 48)),
+                    ]
+                    if any(border.getbbox() for border in borders):
+                        errors.append(f"frame {monster_type} {column} touche le bord de sa cellule")
+                    else:
+                        edge_safe_frames += 1
     metrics = {
         "heroAnimationFrames": sum(value[1] for value in atlas.get("hero", {}).get("states", {}).values()) * len(atlas.get("hero", {}).get("dirs", [])),
         "monsterAnimationFrames": sum(value[1] for value in atlas.get("monsters", {}).get("states", {}).values()) * len(atlas.get("monsters", {}).get("types", [])),
         "uiIcons": len(atlas.get("ui", {}).get("names", [])),
         "effectFrames": sum(value[1] for value in atlas.get("effects", {}).get("states", {}).values()),
+        "edgeSafeNewMonsterFrames": edge_safe_frames,
     }
     report = {
-        "version": "1.1.0-foundation.1",
+        "version": "1.2.0-alpha.1",
         "status": "PASS" if not errors else "FAIL",
         "sourceOfTruth": "scripts/generate_assets.py",
         "runtimeFormat": "PNG atlases generated deterministically at build time",

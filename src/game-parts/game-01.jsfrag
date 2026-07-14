@@ -4,6 +4,24 @@
   function classXpNeeded(level) { return 62 + level * 27 + Math.floor(level ** 1.35 * 6); }
   function masteryXpNeeded(level) { return 24 + level * 16 + Math.floor(level ** 1.2 * 3); }
   function playerSpeed() { return 100 + Math.max(0, game.state.player.level - 1); }
+  function classDefinition(name = game.state.player.className) { return CLASS_DEFS[name] || CLASS_DEFS.Aventurier; }
+  function weaponRange(name = game.state.player.weapon) { return WEAPONS[name].range + (classDefinition().range[name] || 0); }
+  function classDamageMultiplier(mastery) { return 1 + (classDefinition().damage[mastery] || 0); }
+  function visibleWorldWidth() { return game.viewport.w / WORLD_SCALE; }
+  function visibleWorldHeight() { return game.viewport.h / WORLD_SCALE; }
+
+  function monsterMaxHp(type, level) {
+    return MONSTER_DEFS[type].hp + Math.max(0, level - 1) * 9;
+  }
+
+  function monsterDamage(monster) {
+    return MONSTER_DEFS[monster.type].damage + Math.floor(monster.level * .7);
+  }
+
+  function monsterRewards(monster) {
+    const def = MONSTER_DEFS[monster.type];
+    return { generalXp: def.xp + monster.level * 5, classXp: def.classXp + monster.level * 3 };
+  }
 
   function equipmentStats() {
     const total = { maxHp: 0, maxMp: 0, melee: 0, ranged: 0, magic: 0, defense: 0 };
@@ -15,8 +33,8 @@
     return total;
   }
 
-  function maxHp() { return game.state.player.baseMaxHp + equipmentStats().maxHp; }
-  function maxMp() { return game.state.player.baseMaxMp + equipmentStats().maxMp; }
+  function maxHp() { return game.state.player.baseMaxHp + equipmentStats().maxHp + classDefinition().maxHp; }
+  function maxMp() { return game.state.player.baseMaxMp + equipmentStats().maxMp + classDefinition().maxMp; }
   function effectiveMastery(name) { return game.state.masteries[name].level + (equipmentStats()[name] || 0); }
   function defenseValue() { return effectiveMastery('defense'); }
 
@@ -39,7 +57,7 @@
     };
     const mapPromise = EMBEDDED?.map
       ? Promise.resolve(EMBEDDED.map).then(value => { progress('Grille et collisions…'); return value; })
-      : fetch('./assets/map-data.json').then(async response => {
+      : fetch(revisionedAsset('./assets/map-data.json')).then(async response => {
           if (!response.ok) throw new Error('Carte introuvable');
           const json = await response.json();
           progress('Grille et collisions…');
@@ -62,7 +80,10 @@
   }
 
   function makeMover(x, y) {
-    return { x, y, px: x, py: y, path: [], from: null, to: null, step: 0, direction: 'down' };
+    return {
+      x, y, px: x, py: y, path: [], from: null, to: null, step: 0, direction: 'down',
+      routeTargetId: null, routeGoalKey: null, repathAt: 0
+    };
   }
 
   function initWorld() {
@@ -73,8 +94,13 @@
       state: 'idle', stateTime: 0, attackCooldown: 0, pendingAttack: null, hitLock: 0, dying: false, respawnTimer: 0, interaction: null
     };
     game.monsters = game.map.monsterSpawns.map((spawnData, index) => createMonster(spawnData, index));
-    game.camera.x = clamp(game.player.px * TILE - innerWidth / 2, 0, game.map.width * TILE - innerWidth);
-    game.camera.y = clamp(game.player.py * TILE - innerHeight / 2, 0, game.map.height * TILE - innerHeight);
+    for (const monster of game.monsters) {
+      const safeSpawn = nearestWalkable({ x: monster.x, y: monster.y }, { actor: monster }, 4);
+      if (safeSpawn) Object.assign(monster, makeMover(safeSpawn.x, safeSpawn.y));
+      else { monster.dead = true; monster.respawnAt = now() + 1; }
+    }
+    game.camera.x = clamp(game.player.px * TILE - visibleWorldWidth() / 2, 0, Math.max(0, game.map.width * TILE - visibleWorldWidth()));
+    game.camera.y = clamp(game.player.py * TILE - visibleWorldHeight() / 2, 0, Math.max(0, game.map.height * TILE - visibleWorldHeight()));
     drawUiIcons();
     bindControls();
     syncUi(true);
@@ -85,7 +111,8 @@
 
   function createMonster(spawn, index) {
     const def = MONSTER_DEFS[spawn.type];
-    const max = def.hp + Math.max(0, spawn.level - 1) * 9;
+    if (!def) throw new Error(`Type de monstre inconnu : ${spawn.type}`);
+    const max = monsterMaxHp(spawn.type, spawn.level);
     return {
       id: `m-${index}`, type: spawn.type, level: spawn.level, spawnX: spawn.x, spawnY: spawn.y,
       ...makeMover(spawn.x, spawn.y), hp: max, maxHp: max, state: 'idle', stateTime: Math.random(),
@@ -95,14 +122,33 @@
   }
 
   function isInside(x, y) { return x >= 0 && y >= 0 && x < game.map.width && y < game.map.height; }
+  function entityReservesTile(entity, x, y) {
+    if (!entity || entity.dead || entity.dying) return false;
+    if (entity.x === x && entity.y === y) return true;
+    return Boolean(entity.to && entity.to.x === x && entity.to.y === y);
+  }
+
   function isWalkable(x, y, options = {}) {
     if (!isInside(x, y) || game.blocked.has(key(x, y))) return false;
-    if (!options.ignoreMonsters) {
-      for (const monster of game.monsters) {
-        if (!monster.dead && monster.id !== options.ignoreMonsterId && monster.x === x && monster.y === y) return false;
-      }
+    const actor = options.actor || null;
+    if (game.player && game.player !== actor && entityReservesTile(game.player, x, y)) return false;
+    for (const monster of game.monsters) {
+      if (monster !== actor && monster.id !== options.ignoreMonsterId && entityReservesTile(monster, x, y)) return false;
     }
     return true;
+  }
+
+  function nearestWalkable(origin, options = {}, maxRadius = 6) {
+    for (let radius = 0; radius <= maxRadius; radius++) {
+      for (let dy = -radius; dy <= radius; dy++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+          if (Math.abs(dx) + Math.abs(dy) !== radius) continue;
+          const x = origin.x + dx, y = origin.y + dy;
+          if (isWalkable(x, y, options)) return { x, y };
+        }
+      }
+    }
+    return null;
   }
 
   function findPath(start, goal, range = 0, options = {}) {
@@ -120,7 +166,7 @@
       if (closed.has(ck)) continue;
       closed.add(ck);
       const d = Math.abs(current.x - goal.x) + Math.abs(current.y - goal.y);
-      if (d <= range) { found = current; break; }
+      if (d <= range && (!options.requireLineOfSight || lineOfSight(current, goal))) { found = current; break; }
       for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
         const nx = current.x + dx, ny = current.y + dy, nk = key(nx, ny);
         if (closed.has(nk) || !isWalkable(nx, ny, options)) continue;
@@ -144,12 +190,13 @@
   }
 
   function lineOfSight(a, b) {
-    let x0 = Math.round(a.x), y0 = Math.round(a.y), x1 = Math.round(b.x), y1 = Math.round(b.y);
+    const start = renderPosition(a), end = renderPosition(b);
+    let x0 = Math.round(start.x), y0 = Math.round(start.y), x1 = Math.round(end.x), y1 = Math.round(end.y);
     const dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
     const dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
     let err = dx + dy;
     while (true) {
-      if (!(x0 === Math.round(a.x) && y0 === Math.round(a.y)) && game.blocked.has(key(x0, y0))) return false;
+      if (!(x0 === Math.round(start.x) && y0 === Math.round(start.y)) && game.blocked.has(key(x0, y0))) return false;
       if (x0 === x1 && y0 === y1) break;
       const e2 = 2 * err;
       if (e2 >= dy) { err += dy; x0 += sx; }
@@ -157,4 +204,3 @@
     }
     return true;
   }
-

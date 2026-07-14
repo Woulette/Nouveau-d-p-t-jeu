@@ -1,28 +1,32 @@
-# Étape 2 — Refonte artistique
+# Étape 2 — Harmonie visuelle et jouabilité mobile
 
 ## État actuel
 
-La fondation de l’étape 1 est verrouillée sur `main`. La refonte artistique travaille uniquement sur `develop`.
+`1.2.0-alpha.1` est un candidat de l’étape 2 sur `develop`, pas encore une release de production.
 
-### Terminé
+### Intégré au candidat
 
-- direction artistique écrite et verrouillée ;
-- trois atlas PNG officiels contrôlés par SHA-256 ;
-- galerie de contrôle visuel des atlas ;
-- découpage reproductible des atlas en sprites PNG individuels ;
-- catalogue JSON avec dimensions, coordonnées d’origine et sommes de contrôle ;
-- planches de contact pour les personnages, le monde et l’interface ;
-- tests CI d’intégrité des assets.
+- monde rendu à 75 % pour augmenter la surface visible et se rapprocher de la densité de la référence ;
+- HUD compact, cibles tactiles d’au moins 44 px et centre de l’écran dégagé ;
+- bâton, fronde et orbe alignés sur le bord gauche ;
+- poursuite dynamique, réservations et respawns sans superposition ;
+- Ours de Solenne et Sylvain épineux avec animations complètes ;
+- évolution permanente Épéiste, Archer ou Mage au rang Aventurier 20 ;
+- bonus de classe réels et sauvegardés ;
+- versionnement des URLs d’assets pour les mises à niveau PWA.
 
-### En cours
+### Validation avant livraison
 
-- attribution de noms fonctionnels aux sprites découpés ;
-- sélection des meilleures variantes pour l’Aventurier ;
-- construction des séquences repos, marche, bâton, lance-pierre, magie, dégâts et mort ;
-- sélection et classement des monstres ;
-- composition de la nouvelle Clairière de Solenne avec les décors détaillés ;
-- remplacement progressif des assets générés dans le moteur par les PNG du dépôt.
+- workflow Playwright GitHub sur les quatre formats mobiles ;
+- comparaison visuelle des captures avec la référence ;
+- revue du commit exact de `develop` ;
+- restauration ou reconnexion non ambiguë de la cible Vercel officielle ;
+- génération automatique de `public/` depuis `main` ;
+- QA complète de l’URL distante.
 
-### Règle de livraison
+### Suite artistique
 
-Aucun changement artistique ne sera fusionné dans `main` tant que les animations, la lisibilité et la densité visuelle ne sont pas au moins égales à la version stable.
+- augmenter la variété des décors et des silhouettes ;
+- améliorer les transitions et impacts de combat ;
+- poursuivre l’équilibrage des nouvelles zones et familles ;
+- conserver le pipeline déterministe comme source officielle.

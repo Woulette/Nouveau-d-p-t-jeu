@@ -1,26 +1,26 @@
-# Rapport QA — Alpha 1.0.0-alpha.3
+# Rapport QA — candidat local 1.2.0-alpha.1
 
-Le fichier destiné à la production a été testé dans Chromium headless.
+## État
 
-## Écrans testés
+- génération et audit des assets : PASS ;
+- assemblage `dist/` et validation statique : PASS ;
+- page autonome : PASS ;
+- reproductibilité : à prendre uniquement dans `docs/REPRODUCIBILITY.json` généré sur le dernier arbre ;
+- exécution Chromium locale : PASS sur 667×375, 812×375, 844×390, 896×414 et 932×430 ;
+- workflow GitHub Playwright : à confirmer après le push du commit exact ;
+- QA distante Vercel : BLOQUÉE, cible officielle invisible.
 
-- 667 × 375
-- 844 × 390
-- 896 × 414
-- 932 × 430
+## Scénarios Chromium validés localement
 
-## Vérifications automatiques
+- aucune erreur JavaScript ni écran fatal ;
+- monde à 75 %, contrôles visibles, armes à gauche et cibles tactiles ≥44 px ;
+- aucune collision majeure entre HUD, cible et menus ;
+- poursuite simultanée : joueur et monstre parcourent plusieurs cases avant que le joueur frappe ;
+- aucune case réservée commune, position fractionnaire au repos ou étape diagonale ;
+- respawn et chargement sans superposition ;
+- trois styles de combat ;
+- Ours et Sylvain plus forts et plus généreux en XP ;
+- profils Épéiste, Archer et Mage, dont l’avantage de portée Archer en combat réel ;
+- transition Aventurier 19→20, choix permanent, conservation des données et sauvegarde après rechargement.
 
-- chargement de l’interface et du moteur sans erreur JavaScript ;
-- carte détaillée visible, sans grand écran vert uniforme ;
-- personnage et monstres visibles ;
-- boucle d’animation active ;
-- déplacement et pathfinding ;
-- sélection d’un monstre et combat automatique ;
-- sélection des trois armes ;
-- ouverture des statistiques et de l’inventaire ;
-- récompenses en XP, XP de classe et or ;
-- sauvegarde locale ;
-- présence du marqueur de build `1.0.0-alpha.3`.
-
-Les tests devront être rejoués avant chaque déploiement de production.
+Les tests doivent être rejoués sur l’URL exacte avant toute annonce de production.

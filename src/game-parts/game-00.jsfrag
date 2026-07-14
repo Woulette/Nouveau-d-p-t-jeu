@@ -1,15 +1,25 @@
 (() => {
   'use strict';
 
-  const BUILD = '1.1.0-foundation.1';
+  const BUILD = '1.2.0-alpha.1';
   const TILE = 32;
+  const WORLD_SCALE = .75;
   const SAVE_KEY = 'chroniques-solenne-save-v1';
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
   const lerp = (a, b, t) => a + (b - a) * t;
   const manhattan = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
-  const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const renderPosition = entity => ({
+    x: Number.isFinite(entity?.px) ? entity.px : entity.x,
+    y: Number.isFinite(entity?.py) ? entity.py : entity.y
+  });
+  const settledTile = entity => ({ x: entity.x, y: entity.y });
+  const committedTile = entity => entity?.to ? { x: entity.to.x, y: entity.to.y } : settledTile(entity);
+  const distance = (a, b) => {
+    const pa = renderPosition(a), pb = renderPosition(b);
+    return Math.hypot(pa.x - pb.x, pa.y - pb.y);
+  };
   const key = (x, y) => `${x},${y}`;
   const deepClone = (value) => JSON.parse(JSON.stringify(value));
   const now = () => performance.now() / 1000;
@@ -28,7 +38,8 @@
     targetCard: $('#target-card'), targetName: $('#target-name'), targetLevel: $('#target-level'), targetHp: $('#target-hp-bar'),
     worldHint: $('#world-hint-text'), inventoryCount: $('#inventory-count'), potionCount: $('#potion-count'),
     drawer: $('#drawer'), drawerBackdrop: $('#drawer-backdrop'), drawerTitle: $('#drawer-title'), drawerKicker: $('#drawer-kicker'), drawerContent: $('#drawer-content'),
-    classModal: $('#class-modal'), settingsModal: $('#settings-modal'), toastStack: $('#toast-stack'),
+    classModal: $('#class-modal'), classGrid: $('#class-grid'), classConfirmation: $('#class-confirmation'),
+    classConfirmName: $('#class-confirm-name'), settingsModal: $('#settings-modal'), toastStack: $('#toast-stack'),
     deathVignette: $('#death-vignette'), effectsToggle: $('#effects-toggle'), gridToggle: $('#grid-toggle'),
     fatal: $('#fatal-error'), fatalMessage: $('#fatal-message')
   };
@@ -50,7 +61,7 @@
     hit: { start: 14, count: 3, fps: 9, loop: false },
     death: { start: 17, count: 6, fps: 8, loop: false }
   };
-  const MONSTER_ROW = { slime: 0, rat: 1, boar: 2, wolf: 3, wisp: 4 };
+  const MONSTER_ROW = { slime: 0, rat: 1, boar: 2, wolf: 3, wisp: 4, bear: 5, treant: 6 };
   const UI_ICON = { staff: 0, sling: 1, orb: 2, bag: 3, stats: 4, potion: 5, coin: 6, settings: 7, sword: 8, archer: 9, mage: 10, boots: 11 };
   const EFFECT_FRAME = { hit: [0, 6], stone: [6, 4], magic: [10, 8], level: [18, 8], heal: [26, 6] };
 
@@ -60,12 +71,21 @@
     orb: { label: 'Orbe', state: 'cast', mastery: 'magic', range: 5.6, cooldown: 1.18, mana: 4, projectile: 'magic', baseDamage: 8, hitAt: 0.40 }
   };
 
+  const CLASS_DEFS = {
+    Aventurier: { maxHp: 0, maxMp: 0, damage: {}, range: {}, summary: 'Polyvalent' },
+    'Épéiste': { maxHp: 12, maxMp: 0, damage: { melee: .12 }, range: {}, summary: '+12 PV · +12 % bâton' },
+    Archer: { maxHp: 0, maxMp: 0, damage: { ranged: .12 }, range: { sling: .6 }, summary: '+12 % fronde · +0,6 portée' },
+    Mage: { maxHp: 0, maxMp: 12, damage: { magic: .12 }, range: { orb: .5 }, summary: '+12 PM · +12 % orbe' }
+  };
+
   const MONSTER_DEFS = {
     slime: { name: 'Gelée des prés', hp: 34, damage: 3, speed: 76, attackRate: 1.45, xp: 22, classXp: 14, gold: [2, 7], aggro: 4.6 },
     rat: { name: 'Rat des chemins', hp: 42, damage: 4, speed: 92, attackRate: 1.25, xp: 28, classXp: 17, gold: [3, 9], aggro: 5.2 },
     boar: { name: 'Sanglier brun', hp: 68, damage: 7, speed: 84, attackRate: 1.55, xp: 44, classXp: 25, gold: [5, 13], aggro: 5.5 },
     wolf: { name: 'Loup des lisières', hp: 82, damage: 9, speed: 110, attackRate: 1.18, xp: 58, classXp: 32, gold: [7, 17], aggro: 6.2 },
-    wisp: { name: 'Feu follet', hp: 74, damage: 8, speed: 98, attackRate: 1.35, xp: 62, classXp: 36, gold: [8, 19], aggro: 6.6 }
+    wisp: { name: 'Feu follet', hp: 74, damage: 8, speed: 98, attackRate: 1.35, xp: 62, classXp: 36, gold: [8, 19], aggro: 6.6 },
+    bear: { name: 'Ours de Solenne', hp: 112, damage: 11, speed: 78, attackRate: 1.62, xp: 84, classXp: 47, gold: [10, 24], aggro: 5.4 },
+    treant: { name: 'Sylvain épineux', hp: 132, damage: 12, speed: 68, attackRate: 1.78, xp: 98, classXp: 56, gold: [13, 29], aggro: 5.0 }
   };
 
   const ITEMS = {
@@ -95,7 +115,8 @@
   };
 
   const EMBEDDED = window.__SOLENNE_EMBEDDED__ || null;
-  const assetUrl = (name, fallback) => EMBEDDED?.[name] || fallback;
+  const revisionedAsset = (url) => `${url}${url.includes('?') ? '&' : '?'}v=${encodeURIComponent(BUILD)}`;
+  const assetUrl = (name, fallback) => EMBEDDED?.[name] || revisionedAsset(fallback);
 
   const game = {
     ready: false,
@@ -111,6 +132,7 @@
     camera: { x: 0, y: 0, targetX: 0, targetY: 0 },
     viewport: { w: innerWidth, h: innerHeight, dpr: Math.min(devicePixelRatio || 1, 2) },
     selectedMonsterId: null,
+    pendingClassChoice: null,
     lastTime: performance.now(),
     uiDirty: true,
     autosaveAt: 0,

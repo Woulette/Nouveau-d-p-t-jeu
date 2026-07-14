@@ -12,7 +12,7 @@
         ell(d,(ox+3+lunge,oy+29,ox+12+lunge,oy+36),hi,PAL["outline"])
         line(d,[(ox+41,oy+26),(ox+47,oy+16)],sh,4)
         rect(d,(ox+14,oy+35,ox+18,oy+42),sh); rect(d,(ox+35,oy+35,ox+39,oy+42),sh)
-    else: # wisp
+    elif t==4: # wisp
         rad=11+(f%2)
         ell(d,(ox+24-rad,oy+23-rad-bob,ox+24+rad,oy+23+rad-bob),main+"88")
         ell(d,(ox+16,oy+14-bob,ox+33,oy+31-bob),main,PAL["outline"])
@@ -22,13 +22,45 @@
             yy=31+i*3; rect(d,(ox+18+i*4,oy+yy,ox+21+i*4,oy+yy+5),main+"aa")
         if state=="attack":
             rr=3+f; ell(d,(ox+36-rr,oy+21-rr,ox+36+rr,oy+21+rr),hi+"99")
+    elif t==5: # bear
+        bear_lunge=min(lunge,2)
+        ell(d,(ox+15+bear_lunge,oy+19-bob,ox+44+bear_lunge,oy+39),main,PAL["outline"])
+        ell(d,(ox+4+bear_lunge,oy+16-bob,ox+28+bear_lunge,oy+38),main,PAL["outline"])
+        ell(d,(ox+5+bear_lunge,oy+11-bob,ox+14+bear_lunge,oy+20),sh,PAL["outline"])
+        ell(d,(ox+19+bear_lunge,oy+10-bob,ox+28+bear_lunge,oy+20),sh,PAL["outline"])
+        ell(d,(ox+3+bear_lunge,oy+26,ox+17+bear_lunge,oy+37),hi,PAL["outline"])
+        rect(d,(ox+8+bear_lunge,oy+23,ox+11+bear_lunge,oy+26),"#f2d56d")
+        rect(d,(ox+20+bear_lunge,oy+22,ox+23+bear_lunge,oy+25),"#f2d56d")
+        rect(d,(ox+13+bear_lunge,oy+31,ox+17+bear_lunge,oy+34),PAL["outline"])
+        rect(d,(ox+16,oy+35,ox+21,oy+43),sh); rect(d,(ox+36,oy+35,ox+41,oy+43),sh)
+        if state=="attack":
+            for claw in range(3):
+                line(d,[(ox+36+bear_lunge,oy+25+claw*3),(ox+46,oy+22+claw*3)],"#efe2bf",2)
+    else: # treant
+        tree_lunge=min(lunge,2)
+        poly(d,[(ox+17,oy+17-bob),(ox+33,oy+17-bob),(ox+38,oy+39),(ox+29,oy+42),(ox+24,oy+35),(ox+19,oy+42),(ox+10,oy+39)],main,PAL["outline"])
+        line(d,[(ox+15,oy+27),(ox+5-tree_lunge,oy+18)],sh,5)
+        line(d,[(ox+34,oy+27),(ox+43+tree_lunge,oy+16)],sh,5)
+        for cx,cy,rr in [(14,16,8),(24,13,10),(34,17,8),(27,21,9)]:
+            ell(d,(ox+cx-rr,oy+cy-rr-bob,ox+cx+rr,oy+cy+rr-bob),hi,PAL["outline"])
+        rect(d,(ox+17,oy+26,ox+21,oy+29),"#f0d768")
+        rect(d,(ox+29,oy+26,ox+33,oy+29),"#f0d768")
+        line(d,[(ox+21,oy+34),(ox+29,oy+34)],PAL["outline"],2)
+        poly(d,[(ox+14,oy+38),(ox+5,oy+45),(ox+20,oy+42)],sh,PAL["outline"])
+        poly(d,[(ox+34,oy+38),(ox+44,oy+45),(ox+28,oy+42)],sh,PAL["outline"])
+        if state=="attack":
+            for leaf in range(3):
+                rect(d,(ox+36+tree_lunge+leaf,oy+10+leaf*4,ox+38+tree_lunge+leaf,oy+13+leaf*4),"#b6cf68",PAL["outline"])
 
 
 def make_monster_atlas():
     img=Image.new("RGBA",(MON_COLS*MON_FRAME,len(MON_TYPES)*MON_FRAME),(0,0,0,0))
     for ti in range(len(MON_TYPES)):
         for st,(start,count,_fps) in MON_STATES.items():
-            for f in range(count): draw_monster(img,(start+f)*MON_FRAME,ti*MON_FRAME,ti,st,f)
+            for f in range(count):
+                frame=Image.new("RGBA",(MON_FRAME,MON_FRAME),(0,0,0,0))
+                draw_monster(frame,0,0,ti,st,f)
+                img.alpha_composite(frame,((start+f)*MON_FRAME,ti*MON_FRAME))
     img.save(ASSETS/"monsters.png",optimize=True)
 
 
