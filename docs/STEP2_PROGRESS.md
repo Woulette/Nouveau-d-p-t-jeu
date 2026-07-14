@@ -2,7 +2,7 @@
 
 ## État actuel
 
-`1.2.0-alpha.1` est un candidat de l’étape 2 sur `develop`, pas encore une release de production.
+`1.2.0-alpha.1` est la release de production actuelle, publiée sur `main` et validée sur Vercel.
 
 ### Intégré au candidat
 
@@ -15,14 +15,13 @@
 - bonus de classe réels et sauvegardés ;
 - versionnement des URLs d’assets pour les mises à niveau PWA.
 
-### Validation avant livraison
+### Validation de la livraison
 
-- workflow Playwright GitHub sur les quatre formats mobiles ;
-- comparaison visuelle des captures avec la référence ;
-- revue du commit exact de `develop` ;
-- restauration ou reconnexion non ambiguë de la cible Vercel officielle ;
-- génération automatique de `public/` depuis `main` ;
-- QA complète de l’URL distante.
+- workflow Playwright GitHub sur les cinq formats mobiles : PASS ;
+- comparaison visuelle des captures avec la référence : PASS ;
+- merge source `e0f1a92370569001e04e97b9bc8d54746a561fbe` ;
+- génération automatique de `public/` : `bcd32bdc5c90c1f7d420abdf04046399d1505801` ;
+- production Vercel et QA complète de l’URL distante : PASS.
 
 ### Suite artistique
 

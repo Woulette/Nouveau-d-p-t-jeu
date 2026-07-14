@@ -1,4 +1,4 @@
-# Rapport QA — candidat local 1.2.0-alpha.1
+# Rapport QA — production 1.2.0-alpha.1
 
 ## État
 
@@ -8,7 +8,7 @@
 - reproductibilité : à prendre uniquement dans `docs/REPRODUCIBILITY.json` généré sur le dernier arbre ;
 - exécution Chromium locale : PASS sur 667×375, 812×375, 844×390, 896×414 et 932×430 ;
 - workflow GitHub Playwright : à confirmer après le push du commit exact ;
-- QA distante Vercel : BLOQUÉE, cible officielle invisible.
+- QA distante Vercel : PASS sur `https://chroniques-de-solenne.vercel.app`.
 
 ## Scénarios Chromium validés localement
 

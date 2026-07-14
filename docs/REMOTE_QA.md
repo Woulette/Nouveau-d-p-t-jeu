@@ -1,18 +1,26 @@
-# Validation distante Vercel
+# Validation distante Vercel — 1.2.0-alpha.1
 
-Aucune QA distante de `1.2.0-alpha.1` n’est actuellement validée.
+Validation effectuée le **14 juillet 2026** sur l’unique production officielle :
 
-Les anciens contrôles des versions 1.0 et 1.1 sont historiques et ne prouvent pas l’état du candidat courant. La dernière production historiquement validée reste `1.1.0-foundation.1`.
+`https://chroniques-de-solenne.vercel.app`
 
-Au 14 juillet 2026, le projet officiel `chroniques-de-solenne` n’est pas visible via le connecteur Vercel. L’URL ne doit donc pas être annoncée comme servant la version 1.2, et aucun autre projet ne doit être utilisé.
+## Chaîne publiée
 
-Après restauration de la cible, vérifier sur le déploiement exact :
+- merge de production : `e0f1a92370569001e04e97b9bc8d54746a561fbe` ;
+- sortie statique validée : `bcd32bdc5c90c1f7d420abdf04046399d1505801` ;
+- marqueur distant : version `1.2.0-alpha.1`, branche `main`, validation `PASS` ;
+- statut Vercel du commit statique : `success` ;
+- réponse publique : HTTP 200, serveur Vercel, HTML 1.2.
 
-1. numéro de build et commit servis ;
-2. absence d’erreur console et d’écran fatal ;
-3. quatre formats paysage ;
-4. poursuite et réservations ;
-5. trois styles, nouvelles familles et récompenses ;
-6. passage au rang 20 et choix de classe sauvegardé ;
-7. sauvegarde, mort, respawn et mise à niveau du cache ;
-8. captures comparées à la référence.
+## QA Chromium distante
+
+- formats 667×375, 812×375, 844×390, 896×414 et 932×430 : PASS ;
+- aucune erreur console, JavaScript, réseau ou réponse HTTP en échec ;
+- monde à 75 %, commandes tactiles d’au moins 44 px et armes alignées à gauche ;
+- déplacement tactile sur grille : PASS ;
+- poursuite simultanée joueur/monstre, attaque et réservations sans chevauchement : PASS ;
+- Ours de Solenne et Sylvain épineux présents avec récompenses supérieures : PASS ;
+- évolution permanente vers Archer et persistance après rechargement : PASS ;
+- service worker actif avec uniquement le cache `solenne-alpha-1.2.0-a1` : PASS.
+
+Le connecteur Vercel reste limité en lecture pour ce projet (404/403), mais la cible a été confirmée visuellement par l’utilisateur, par l’intégration GitHub/Vercel et par l’URL canonique testée. Aucun autre projet n’a été utilisé.

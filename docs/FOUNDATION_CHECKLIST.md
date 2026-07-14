@@ -22,7 +22,7 @@
 - [x] Fondation consolidée installée sur la branche officielle `develop`.
 - [x] Configuration attendue du projet Vercel unique enregistrée.
 - [x] Refus sûr d’un preview `develop` lorsque `public/` contient encore la production historique.
-- [ ] Projet Vercel historique `chroniques-de-solenne` de nouveau visible dans l’équipe connectée.
-- [ ] Release `main` reconstruite dans `public/`, déployée puis validée sur le projet Vercel historique.
+- [x] Projet Vercel historique `chroniques-de-solenne` confirmé dans l’équipe connectée.
+- [x] Release `main` reconstruite dans `public/`, déployée puis validée sur le projet Vercel historique.
 
-La fondation GitHub est clôturée. La publication distante reste bloquée uniquement par l’absence du projet Vercel historique dans l’équipe actuellement connectée. Voir `docs/CURRENT_STATUS.md`.
+La fondation GitHub et la publication distante 1.2 sont validées. Voir `docs/CURRENT_STATUS.md` et `docs/REMOTE_QA.md`.

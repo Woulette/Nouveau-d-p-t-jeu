@@ -7,13 +7,13 @@ MMORPG mobile 2D en pixel art original de **Woulette**, jouable en paysage et pi
 - dépôt officiel : `Woulette/Nouveau-d-p-t-jeu` ;
 - `develop` : développement et validation ;
 - `main` : production uniquement après validation complète ;
-- candidat courant : `1.2.0-alpha.1` sur `develop` ;
-- dernière production historiquement validée : `1.1.0-foundation.1` ;
+- production courante : `1.2.0-alpha.1` sur `main` ;
+- branche de développement resynchronisée après publication : `develop` ;
 - cible Vercel unique attendue : `chroniques-de-solenne`.
 
 Le projet Vercel officiel doit être visible et vérifié avant une publication. Aucun autre projet ne doit être utilisé. `voidsector-game` est un autre jeu, totalement hors périmètre.
 
-## Fonctionnalités du candidat 1.2
+## Fonctionnalités de la version 1.2
 
 - déplacement tactile case par case avec interpolation fluide ;
 - poursuite joueur/monstre recalculée sur les positions engagées et cases réservées ;
