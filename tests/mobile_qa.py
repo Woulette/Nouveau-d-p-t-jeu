@@ -156,9 +156,9 @@ async def functional_checks(page: Page) -> dict[str, object]:
           if(!s.test.teleport(16,15)) throw new Error('Fixture détour inaccessible');
           Object.assign(target,{x:22,y:15,px:22,py:15,path:[],from:null,to:null,step:0,routeTargetId:null,
             routeGoalKey:null,repathAt:0,aggro:false,wanderAt:performance.now()/1000+9999,hp:target.maxHp,
-            dead:false,pendingAttack:null,attackCooldown:999});
+            dead:false,pendingAttack:null,attackCooldown:999,hitLock:999});
           Object.assign(blocker,{x:40,y:30,px:40,py:30,path:[],from:null,to:null,step:0,aggro:false,
-            wanderAt:performance.now()/1000+9999,dead:false,pendingAttack:null,attackCooldown:999});
+            wanderAt:performance.now()/1000+9999,dead:false,pendingAttack:null,attackCooldown:999,hitLock:999});
           s.test.selectMonster(0);
           return {targetHp:target.hp};
         }"""
@@ -167,7 +167,8 @@ async def functional_checks(page: Page) -> dict[str, object]:
     await page.evaluate(
         """() => {
           const blocker=window.__SOLENNE__.monsters[1];
-          Object.assign(blocker,{x:18,y:15,px:18,py:15,path:[],from:null,to:null,step:0,aggro:false,wanderAt:performance.now()/1000+9999});
+          Object.assign(blocker,{x:18,y:15,px:18,py:15,path:[],from:null,to:null,step:0,aggro:false,
+            hitLock:999,wanderAt:performance.now()/1000+9999});
         }"""
     )
     await page.wait_for_function("before => window.__SOLENNE__.monsters[0].hp < before", arg=blocked_setup['targetHp'], timeout=6_000)
