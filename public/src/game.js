@@ -1,15 +1,25 @@
 (() => {
   'use strict';
 
-  const BUILD = '1.1.0-foundation.1';
+  const BUILD = '1.2.0-alpha.1';
   const TILE = 32;
+  const WORLD_SCALE = .75;
   const SAVE_KEY = 'chroniques-solenne-save-v1';
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
   const lerp = (a, b, t) => a + (b - a) * t;
   const manhattan = (a, b) => Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
-  const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+  const renderPosition = entity => ({
+    x: Number.isFinite(entity?.px) ? entity.px : entity.x,
+    y: Number.isFinite(entity?.py) ? entity.py : entity.y
+  });
+  const settledTile = entity => ({ x: entity.x, y: entity.y });
+  const committedTile = entity => entity?.to ? { x: entity.to.x, y: entity.to.y } : settledTile(entity);
+  const distance = (a, b) => {
+    const pa = renderPosition(a), pb = renderPosition(b);
+    return Math.hypot(pa.x - pb.x, pa.y - pb.y);
+  };
   const key = (x, y) => `${x},${y}`;
   const deepClone = (value) => JSON.parse(JSON.stringify(value));
   const now = () => performance.now() / 1000;
@@ -28,7 +38,8 @@
     targetCard: $('#target-card'), targetName: $('#target-name'), targetLevel: $('#target-level'), targetHp: $('#target-hp-bar'),
     worldHint: $('#world-hint-text'), inventoryCount: $('#inventory-count'), potionCount: $('#potion-count'),
     drawer: $('#drawer'), drawerBackdrop: $('#drawer-backdrop'), drawerTitle: $('#drawer-title'), drawerKicker: $('#drawer-kicker'), drawerContent: $('#drawer-content'),
-    classModal: $('#class-modal'), settingsModal: $('#settings-modal'), toastStack: $('#toast-stack'),
+    classModal: $('#class-modal'), classGrid: $('#class-grid'), classConfirmation: $('#class-confirmation'),
+    classConfirmName: $('#class-confirm-name'), settingsModal: $('#settings-modal'), toastStack: $('#toast-stack'),
     deathVignette: $('#death-vignette'), effectsToggle: $('#effects-toggle'), gridToggle: $('#grid-toggle'),
     fatal: $('#fatal-error'), fatalMessage: $('#fatal-message')
   };
@@ -50,7 +61,7 @@
     hit: { start: 14, count: 3, fps: 9, loop: false },
     death: { start: 17, count: 6, fps: 8, loop: false }
   };
-  const MONSTER_ROW = { slime: 0, rat: 1, boar: 2, wolf: 3, wisp: 4 };
+  const MONSTER_ROW = { slime: 0, rat: 1, boar: 2, wolf: 3, wisp: 4, bear: 5, treant: 6 };
   const UI_ICON = { staff: 0, sling: 1, orb: 2, bag: 3, stats: 4, potion: 5, coin: 6, settings: 7, sword: 8, archer: 9, mage: 10, boots: 11 };
   const EFFECT_FRAME = { hit: [0, 6], stone: [6, 4], magic: [10, 8], level: [18, 8], heal: [26, 6] };
 
@@ -60,12 +71,21 @@
     orb: { label: 'Orbe', state: 'cast', mastery: 'magic', range: 5.6, cooldown: 1.18, mana: 4, projectile: 'magic', baseDamage: 8, hitAt: 0.40 }
   };
 
+  const CLASS_DEFS = {
+    Aventurier: { maxHp: 0, maxMp: 0, damage: {}, range: {}, summary: 'Polyvalent' },
+    'Épéiste': { maxHp: 12, maxMp: 0, damage: { melee: .12 }, range: {}, summary: '+12 PV · +12 % bâton' },
+    Archer: { maxHp: 0, maxMp: 0, damage: { ranged: .12 }, range: { sling: .6 }, summary: '+12 % fronde · +0,6 portée' },
+    Mage: { maxHp: 0, maxMp: 12, damage: { magic: .12 }, range: { orb: .5 }, summary: '+12 PM · +12 % orbe' }
+  };
+
   const MONSTER_DEFS = {
     slime: { name: 'Gelée des prés', hp: 34, damage: 3, speed: 76, attackRate: 1.45, xp: 22, classXp: 14, gold: [2, 7], aggro: 4.6 },
     rat: { name: 'Rat des chemins', hp: 42, damage: 4, speed: 92, attackRate: 1.25, xp: 28, classXp: 17, gold: [3, 9], aggro: 5.2 },
     boar: { name: 'Sanglier brun', hp: 68, damage: 7, speed: 84, attackRate: 1.55, xp: 44, classXp: 25, gold: [5, 13], aggro: 5.5 },
     wolf: { name: 'Loup des lisières', hp: 82, damage: 9, speed: 110, attackRate: 1.18, xp: 58, classXp: 32, gold: [7, 17], aggro: 6.2 },
-    wisp: { name: 'Feu follet', hp: 74, damage: 8, speed: 98, attackRate: 1.35, xp: 62, classXp: 36, gold: [8, 19], aggro: 6.6 }
+    wisp: { name: 'Feu follet', hp: 74, damage: 8, speed: 98, attackRate: 1.35, xp: 62, classXp: 36, gold: [8, 19], aggro: 6.6 },
+    bear: { name: 'Ours de Solenne', hp: 112, damage: 11, speed: 78, attackRate: 1.62, xp: 84, classXp: 47, gold: [10, 24], aggro: 5.4 },
+    treant: { name: 'Sylvain épineux', hp: 132, damage: 12, speed: 68, attackRate: 1.78, xp: 98, classXp: 56, gold: [13, 29], aggro: 5.0 }
   };
 
   const ITEMS = {
@@ -95,7 +115,8 @@
   };
 
   const EMBEDDED = window.__SOLENNE_EMBEDDED__ || null;
-  const assetUrl = (name, fallback) => EMBEDDED?.[name] || fallback;
+  const revisionedAsset = (url) => `${url}${url.includes('?') ? '&' : '?'}v=${encodeURIComponent(BUILD)}`;
+  const assetUrl = (name, fallback) => EMBEDDED?.[name] || revisionedAsset(fallback);
 
   const game = {
     ready: false,
@@ -111,6 +132,7 @@
     camera: { x: 0, y: 0, targetX: 0, targetY: 0 },
     viewport: { w: innerWidth, h: innerHeight, dpr: Math.min(devicePixelRatio || 1, 2) },
     selectedMonsterId: null,
+    pendingClassChoice: null,
     lastTime: performance.now(),
     uiDirty: true,
     autosaveAt: 0,
@@ -164,6 +186,24 @@
   function classXpNeeded(level) { return 62 + level * 27 + Math.floor(level ** 1.35 * 6); }
   function masteryXpNeeded(level) { return 24 + level * 16 + Math.floor(level ** 1.2 * 3); }
   function playerSpeed() { return 100 + Math.max(0, game.state.player.level - 1); }
+  function classDefinition(name = game.state.player.className) { return CLASS_DEFS[name] || CLASS_DEFS.Aventurier; }
+  function weaponRange(name = game.state.player.weapon) { return WEAPONS[name].range + (classDefinition().range[name] || 0); }
+  function classDamageMultiplier(mastery) { return 1 + (classDefinition().damage[mastery] || 0); }
+  function visibleWorldWidth() { return game.viewport.w / WORLD_SCALE; }
+  function visibleWorldHeight() { return game.viewport.h / WORLD_SCALE; }
+
+  function monsterMaxHp(type, level) {
+    return MONSTER_DEFS[type].hp + Math.max(0, level - 1) * 9;
+  }
+
+  function monsterDamage(monster) {
+    return MONSTER_DEFS[monster.type].damage + Math.floor(monster.level * .7);
+  }
+
+  function monsterRewards(monster) {
+    const def = MONSTER_DEFS[monster.type];
+    return { generalXp: def.xp + monster.level * 5, classXp: def.classXp + monster.level * 3 };
+  }
 
   function equipmentStats() {
     const total = { maxHp: 0, maxMp: 0, melee: 0, ranged: 0, magic: 0, defense: 0 };
@@ -175,8 +215,8 @@
     return total;
   }
 
-  function maxHp() { return game.state.player.baseMaxHp + equipmentStats().maxHp; }
-  function maxMp() { return game.state.player.baseMaxMp + equipmentStats().maxMp; }
+  function maxHp() { return game.state.player.baseMaxHp + equipmentStats().maxHp + classDefinition().maxHp; }
+  function maxMp() { return game.state.player.baseMaxMp + equipmentStats().maxMp + classDefinition().maxMp; }
   function effectiveMastery(name) { return game.state.masteries[name].level + (equipmentStats()[name] || 0); }
   function defenseValue() { return effectiveMastery('defense'); }
 
@@ -199,7 +239,7 @@
     };
     const mapPromise = EMBEDDED?.map
       ? Promise.resolve(EMBEDDED.map).then(value => { progress('Grille et collisions…'); return value; })
-      : fetch('./assets/map-data.json').then(async response => {
+      : fetch(revisionedAsset('./assets/map-data.json')).then(async response => {
           if (!response.ok) throw new Error('Carte introuvable');
           const json = await response.json();
           progress('Grille et collisions…');
@@ -222,7 +262,10 @@
   }
 
   function makeMover(x, y) {
-    return { x, y, px: x, py: y, path: [], from: null, to: null, step: 0, direction: 'down' };
+    return {
+      x, y, px: x, py: y, path: [], from: null, to: null, step: 0, direction: 'down',
+      routeTargetId: null, routeGoalKey: null, repathAt: 0
+    };
   }
 
   function initWorld() {
@@ -233,8 +276,13 @@
       state: 'idle', stateTime: 0, attackCooldown: 0, pendingAttack: null, hitLock: 0, dying: false, respawnTimer: 0, interaction: null
     };
     game.monsters = game.map.monsterSpawns.map((spawnData, index) => createMonster(spawnData, index));
-    game.camera.x = clamp(game.player.px * TILE - innerWidth / 2, 0, game.map.width * TILE - innerWidth);
-    game.camera.y = clamp(game.player.py * TILE - innerHeight / 2, 0, game.map.height * TILE - innerHeight);
+    for (const monster of game.monsters) {
+      const safeSpawn = nearestWalkable({ x: monster.x, y: monster.y }, { actor: monster }, 4);
+      if (safeSpawn) Object.assign(monster, makeMover(safeSpawn.x, safeSpawn.y));
+      else { monster.dead = true; monster.respawnAt = now() + 1; }
+    }
+    game.camera.x = clamp(game.player.px * TILE - visibleWorldWidth() / 2, 0, Math.max(0, game.map.width * TILE - visibleWorldWidth()));
+    game.camera.y = clamp(game.player.py * TILE - visibleWorldHeight() / 2, 0, Math.max(0, game.map.height * TILE - visibleWorldHeight()));
     drawUiIcons();
     bindControls();
     syncUi(true);
@@ -245,7 +293,8 @@
 
   function createMonster(spawn, index) {
     const def = MONSTER_DEFS[spawn.type];
-    const max = def.hp + Math.max(0, spawn.level - 1) * 9;
+    if (!def) throw new Error(`Type de monstre inconnu : ${spawn.type}`);
+    const max = monsterMaxHp(spawn.type, spawn.level);
     return {
       id: `m-${index}`, type: spawn.type, level: spawn.level, spawnX: spawn.x, spawnY: spawn.y,
       ...makeMover(spawn.x, spawn.y), hp: max, maxHp: max, state: 'idle', stateTime: Math.random(),
@@ -255,14 +304,33 @@
   }
 
   function isInside(x, y) { return x >= 0 && y >= 0 && x < game.map.width && y < game.map.height; }
+  function entityReservesTile(entity, x, y) {
+    if (!entity || entity.dead || entity.dying) return false;
+    if (entity.x === x && entity.y === y) return true;
+    return Boolean(entity.to && entity.to.x === x && entity.to.y === y);
+  }
+
   function isWalkable(x, y, options = {}) {
     if (!isInside(x, y) || game.blocked.has(key(x, y))) return false;
-    if (!options.ignoreMonsters) {
-      for (const monster of game.monsters) {
-        if (!monster.dead && monster.id !== options.ignoreMonsterId && monster.x === x && monster.y === y) return false;
-      }
+    const actor = options.actor || null;
+    if (game.player && game.player !== actor && entityReservesTile(game.player, x, y)) return false;
+    for (const monster of game.monsters) {
+      if (monster !== actor && monster.id !== options.ignoreMonsterId && entityReservesTile(monster, x, y)) return false;
     }
     return true;
+  }
+
+  function nearestWalkable(origin, options = {}, maxRadius = 6) {
+    for (let radius = 0; radius <= maxRadius; radius++) {
+      for (let dy = -radius; dy <= radius; dy++) {
+        for (let dx = -radius; dx <= radius; dx++) {
+          if (Math.abs(dx) + Math.abs(dy) !== radius) continue;
+          const x = origin.x + dx, y = origin.y + dy;
+          if (isWalkable(x, y, options)) return { x, y };
+        }
+      }
+    }
+    return null;
   }
 
   function findPath(start, goal, range = 0, options = {}) {
@@ -280,7 +348,7 @@
       if (closed.has(ck)) continue;
       closed.add(ck);
       const d = Math.abs(current.x - goal.x) + Math.abs(current.y - goal.y);
-      if (d <= range) { found = current; break; }
+      if (d <= range && (!options.requireLineOfSight || lineOfSight(current, goal))) { found = current; break; }
       for (const [dx, dy] of [[1,0],[-1,0],[0,1],[0,-1]]) {
         const nx = current.x + dx, ny = current.y + dy, nk = key(nx, ny);
         if (closed.has(nk) || !isWalkable(nx, ny, options)) continue;
@@ -304,12 +372,13 @@
   }
 
   function lineOfSight(a, b) {
-    let x0 = Math.round(a.x), y0 = Math.round(a.y), x1 = Math.round(b.x), y1 = Math.round(b.y);
+    const start = renderPosition(a), end = renderPosition(b);
+    let x0 = Math.round(start.x), y0 = Math.round(start.y), x1 = Math.round(end.x), y1 = Math.round(end.y);
     const dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
     const dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
     let err = dx + dy;
     while (true) {
-      if (!(x0 === Math.round(a.x) && y0 === Math.round(a.y)) && game.blocked.has(key(x0, y0))) return false;
+      if (!(x0 === Math.round(start.x) && y0 === Math.round(start.y)) && game.blocked.has(key(x0, y0))) return false;
       if (x0 === x1 && y0 === y1) break;
       const e2 = 2 * err;
       if (e2 >= dy) { err += dy; x0 += sx; }
@@ -317,7 +386,6 @@
     }
     return true;
   }
-
   function setDirection(entity, from, to) {
     const dx = to.x - from.x, dy = to.y - from.y;
     if (Math.abs(dx) > Math.abs(dy)) entity.direction = dx < 0 ? 'left' : 'right';
@@ -325,13 +393,26 @@
   }
 
   function beginStep(entity) {
-    if (entity.to || !entity.path.length) return;
+    if (entity.to || !entity.path.length) return false;
+    const next = entity.path[0];
+    if (manhattan(entity, next) !== 1) {
+      entity.path = [];
+      entity.routeGoalKey = null;
+      entity.px = entity.x; entity.py = entity.y;
+      return false;
+    }
+    if (!isWalkable(next.x, next.y, { actor: entity })) {
+      entity.routeGoalKey = null;
+      entity.repathAt = 0;
+      return false;
+    }
     entity.from = { x: entity.x, y: entity.y };
     entity.to = entity.path.shift();
     entity.step = 0;
     setDirection(entity, entity.from, entity.to);
     entity.state = 'walk';
     entity.stateTime = 0;
+    return true;
   }
 
   function movementDuration(entity, isPlayer) {
@@ -342,10 +423,6 @@
   function updateMovement(entity, dt, isPlayer) {
     beginStep(entity);
     if (!entity.to) return false;
-    if (!isPlayer && game.player && entity.to.x === game.player.x && entity.to.y === game.player.y) {
-      entity.path = []; entity.to = null; entity.from = null; entity.step = 0;
-      return false;
-    }
     entity.step += dt / movementDuration(entity, isPlayer);
     const t = clamp(entity.step, 0, 1);
     const smooth = t * t * (3 - 2 * t);
@@ -354,39 +431,64 @@
     if (t >= 1) {
       entity.x = entity.to.x; entity.y = entity.to.y; entity.px = entity.x; entity.py = entity.y;
       entity.to = null; entity.from = null; entity.step = 0;
-      beginStep(entity);
     }
     return true;
   }
 
   function stopMovement(entity) {
     entity.path = [];
-    if (!entity.to) return;
-    if (entity.step >= .5) {
-      entity.x = entity.to.x; entity.y = entity.to.y;
-    } else if (entity.from) {
-      entity.x = entity.from.x; entity.y = entity.from.y;
-    }
+    entity.routeGoalKey = null;
+    if (entity.from) { entity.x = entity.from.x; entity.y = entity.from.y; }
     entity.px = entity.x; entity.py = entity.y; entity.to = null; entity.from = null; entity.step = 0;
+  }
+
+  function routeSignature(target, range) {
+    const goal = committedTile(target);
+    return `${target.id || 'point'}@${key(goal.x, goal.y)}:${range}`;
+  }
+
+  function tileCanAttack(start, target, range) {
+    return manhattan(start, target) <= range && lineOfSight(start, target);
+  }
+
+  function ensureChasePath(chaser, target, range) {
+    const goal = committedTile(target);
+    const start = committedTile(chaser);
+    const signature = routeSignature(target, range);
+    const atValidTile = tileCanAttack(start, goal, range);
+    if (chaser.routeGoalKey === signature && (chaser.to || chaser.path.length || atValidTile)) return true;
+    if (now() < chaser.repathAt && chaser.routeGoalKey === signature) return atValidTile || chaser.path.length > 0 || Boolean(chaser.to);
+    chaser.repathAt = now() + .12;
+    chaser.path = findPath(start, goal, range, { actor: chaser, requireLineOfSight: true });
+    chaser.routeTargetId = target.id || null;
+    chaser.routeGoalKey = signature;
+    return chaser.path.length > 0 || atValidTile;
   }
 
   function setPlayerPath(destination, range = 0, targetId = null) {
     if (game.player.dying) return;
     game.selectedMonsterId = targetId;
-    const path = findPath(game.player, destination, range, { ignoreMonsterId: targetId });
-    if (!path.length && manhattan(game.player, destination) > range) {
+    game.player.routeTargetId = targetId;
+    game.player.routeGoalKey = null;
+    const target = targetId ? game.monsters.find(monster => monster.id === targetId && !monster.dead) : null;
+    const start = committedTile(game.player);
+    const goal = target ? committedTile(target) : { x: destination.x, y: destination.y };
+    const path = target
+      ? (ensureChasePath(game.player, target, range), game.player.path)
+      : findPath(start, goal, range, { actor: game.player });
+    if (!path.length && !game.player.to && manhattan(start, goal) > range) {
       toast('Ce passage est bloqué');
       return;
     }
-    game.player.path = path;
+    if (!target) game.player.path = path;
     game.player.pendingAttack = null;
-    if (!path.length) game.player.state = 'idle';
+    if (!path.length && !game.player.to) game.player.state = 'idle';
     syncUi(true);
   }
 
   function selectedMonster() { return game.monsters.find(monster => monster.id === game.selectedMonsterId && !monster.dead) || null; }
 
-  function faceToward(entity, target) { setDirection(entity, entity, target); }
+  function faceToward(entity, target) { setDirection(entity, renderPosition(entity), renderPosition(target)); }
 
   function updatePlayer(dt) {
     const player = game.player;
@@ -417,6 +519,22 @@
       return;
     }
 
+    let target = selectedMonster();
+    if (target) {
+      const exactRange = weaponRange();
+      const canAttackFromHere = !player.to && distance(player, target) <= exactRange && lineOfSight(player, target);
+      if (canAttackFromHere) {
+        player.path = [];
+        player.routeGoalKey = null;
+      } else if (!ensureChasePath(player, target, Math.max(1, Math.floor(exactRange))) && !player.to) {
+        toast('La cible est inaccessible');
+        game.selectedMonsterId = null;
+        player.routeTargetId = null;
+        player.routeGoalKey = null;
+        target = null;
+      }
+    }
+
     const moving = updateMovement(player, dt, true);
     if (moving) {
       player.stateTime += dt;
@@ -425,21 +543,17 @@
 
     if (player.interaction === 'mentor' && distance(player, game.map.mentor) <= 1.45) {
       player.interaction = null;
-      if (game.state.player.className === 'Aventurier' && game.state.player.classLevel >= 20 && !game.state.classChoiceLocked) openModal(ui.classModal);
+      if (game.state.player.className === 'Aventurier' && game.state.player.classLevel >= 20 && !game.state.classChoiceLocked) openClassSelection();
     }
 
-    const target = selectedMonster();
+    target = selectedMonster();
     if (target) {
       const weapon = WEAPONS[game.state.player.weapon];
       const d = distance(player, target);
-      if (d > weapon.range || !lineOfSight(player, target)) {
-        if (!player.path.length && !player.to) {
-          player.path = findPath(player, target, Math.max(1, Math.floor(weapon.range)), { ignoreMonsterId: target.id });
-          if (!player.path.length) {
-            toast('La cible est inaccessible');
-            game.selectedMonsterId = null;
-          }
-        }
+      const range = weaponRange();
+      if (d > range || !lineOfSight(player, target)) {
+        ensureChasePath(player, target, Math.max(1, Math.floor(range)));
+        player.state = 'idle'; player.stateTime += dt;
       } else if (player.attackCooldown <= 0) {
         startPlayerAttack(target, weapon);
       } else {
@@ -452,6 +566,7 @@
   }
 
   function startPlayerAttack(target, weapon) {
+    if (game.player.to) return;
     if (game.player.mp < weapon.mana) {
       toast('Pas assez de PM');
       game.player.attackCooldown = .5;
@@ -471,10 +586,10 @@
     const monster = game.monsters.find(m => m.id === attack.targetId && !m.dead);
     if (!monster) return;
     const weapon = WEAPONS[attack.weapon];
-    if (distance(game.player, monster) > weapon.range + .55 || !lineOfSight(game.player, monster)) return;
+    if (distance(game.player, monster) > weaponRange(attack.weapon) + .55 || !lineOfSight(game.player, monster)) return;
     const mastery = effectiveMastery(weapon.mastery);
     const variance = randomInt(-1, 2);
-    const damage = Math.max(1, Math.floor(weapon.baseDamage + mastery * .72 + variance));
+    const damage = Math.max(1, Math.floor((weapon.baseDamage + mastery * .72 + variance) * classDamageMultiplier(weapon.mastery)));
     if (weapon.projectile) {
       game.projectiles.push({ type: weapon.projectile, x: game.player.px, y: game.player.py - .15, targetId: monster.id, damage, mastery: weapon.mastery, speed: weapon.projectile === 'magic' ? 9 : 7.5, life: 2 });
     } else {
@@ -540,13 +655,17 @@
       const playerDistance = distance(monster, game.player);
       if (!game.player.dying && (monster.aggro || playerDistance <= MONSTER_DEFS[monster.type].aggro)) monster.aggro = true;
       if (monster.aggro && !game.player.dying) {
-        if (playerDistance <= 1.25 && monster.attackCooldown <= 0) startMonsterAttack(monster);
-        else if (playerDistance > 1.1) {
-          if (!monster.path.length && !monster.to) monster.path = findPath(monster, game.player, 1, { ignoreMonsters: true });
+        if (!monster.to && playerDistance <= 1.25 && monster.attackCooldown <= 0) startMonsterAttack(monster);
+        else {
+          ensureChasePath(monster, game.player, 1);
           if (updateMovement(monster, dt, false)) monster.stateTime += dt;
           else { monster.state = 'idle'; monster.stateTime += dt; }
         }
-        if (playerDistance > 10) { monster.aggro = false; monster.path = []; }
+        if (playerDistance > 10) {
+          monster.aggro = false;
+          monster.routeTargetId = null;
+          stopMovement(monster);
+        }
       } else {
         if (updateMovement(monster, dt, false)) monster.stateTime += dt;
         else {
@@ -554,7 +673,9 @@
           if (t >= monster.wanderAt) {
             monster.wanderAt = t + 2 + Math.random() * 5;
             const goal = { x: clamp(monster.spawnX + randomInt(-3, 3), 1, game.map.width - 2), y: clamp(monster.spawnY + randomInt(-3, 3), 1, game.map.height - 2) };
-            monster.path = findPath(monster, goal, 0, { ignoreMonsters: true });
+            monster.routeTargetId = null;
+            monster.routeGoalKey = null;
+            monster.path = findPath(committedTile(monster), goal, 0, { actor: monster });
           }
         }
       }
@@ -562,11 +683,12 @@
   }
 
   function startMonsterAttack(monster) {
+    if (monster.to) return;
     stopMovement(monster);
     faceToward(monster, game.player);
     const def = MONSTER_DEFS[monster.type];
     monster.state = 'attack'; monster.stateTime = 0; monster.attackCooldown = def.attackRate;
-    monster.pendingAttack = { hitAt: .42, duration: .70, fired: false, damage: def.damage + Math.floor(monster.level * .7) };
+    monster.pendingAttack = { hitAt: .42, duration: .70, fired: false, damage: monsterDamage(monster) };
   }
 
   function damagePlayer(rawDamage) {
@@ -585,15 +707,22 @@
     if (game.player.dying) return;
     stopMovement(game.player);
     game.player.hp = 0; game.player.dying = true; game.player.state = 'death'; game.player.stateTime = 0; game.player.respawnTimer = 2.2;
+    game.player.routeTargetId = null;
     game.selectedMonsterId = null;
     ui.deathVignette.classList.add('show');
-    for (const monster of game.monsters) { monster.aggro = false; monster.path = []; monster.pendingAttack = null; }
+    for (const monster of game.monsters) {
+      monster.aggro = false;
+      monster.pendingAttack = null;
+      monster.routeTargetId = null;
+      stopMovement(monster);
+    }
     saveGame(); syncUi(true);
   }
 
   function respawnPlayer() {
     const respawn = game.map.villageRespawn;
-    Object.assign(game.player, makeMover(respawn.x, respawn.y));
+    const safeRespawn = nearestWalkable(respawn, { actor: game.player }, 6) || respawn;
+    Object.assign(game.player, makeMover(safeRespawn.x, safeRespawn.y));
     game.player.hp = maxHp(); game.player.mp = maxMp(); game.player.state = 'idle'; game.player.stateTime = 0;
     game.player.dying = false; game.player.respawnTimer = 0; game.player.pendingAttack = null; game.player.attackCooldown = .5;
     ui.deathVignette.classList.remove('show');
@@ -602,12 +731,12 @@
   }
 
   function killMonster(monster) {
-    monster.hp = 0; monster.dead = true; monster.state = 'death'; monster.stateTime = 0; monster.path = []; monster.pendingAttack = null;
+    stopMovement(monster);
+    monster.hp = 0; monster.dead = true; monster.state = 'death'; monster.stateTime = 0; monster.pendingAttack = null;
     monster.respawnAt = now() + 10 + Math.random() * 7;
     if (game.selectedMonsterId === monster.id) game.selectedMonsterId = null;
     const def = MONSTER_DEFS[monster.type];
-    const generalXp = def.xp + monster.level * 5;
-    const classXp = def.classXp + monster.level * 3;
+    const { generalXp, classXp } = monsterRewards(monster);
     const gold = randomInt(def.gold[0], def.gold[1]);
     gainGeneralXp(generalXp); gainClassXp(classXp); game.state.player.gold += gold;
     toast(`+${generalXp} XP · +${classXp} classe · +${gold} or`, 'loot');
@@ -616,10 +745,14 @@
   }
 
   function respawnMonster(monster) {
-    const def = MONSTER_DEFS[monster.type];
+    if (!isWalkable(monster.spawnX, monster.spawnY, { actor: monster })) {
+      monster.respawnAt = now() + 1;
+      return;
+    }
     monster.dead = false; monster.x = monster.spawnX; monster.y = monster.spawnY; monster.px = monster.x; monster.py = monster.y;
     monster.path = []; monster.to = null; monster.from = null; monster.state = 'idle'; monster.stateTime = 0; monster.aggro = false;
-    monster.maxHp = def.hp + Math.max(0, monster.level - 1) * 9; monster.hp = monster.maxHp;
+    monster.routeTargetId = null; monster.routeGoalKey = null; monster.repathAt = 0;
+    monster.maxHp = monsterMaxHp(monster.type, monster.level); monster.hp = monster.maxHp;
   }
 
   function gainGeneralXp(amount) {
@@ -638,6 +771,11 @@
   }
 
   function gainClassXp(amount) {
+    if (game.state.player.className === 'Aventurier' && game.state.player.classLevel >= 20) {
+      game.state.player.classLevel = 20;
+      game.state.player.classXp = 0;
+      return;
+    }
     game.state.player.classXp += amount;
     let needed = classXpNeeded(game.state.player.classLevel);
     while (game.state.player.classXp >= needed) {
@@ -645,7 +783,10 @@
       game.state.player.classLevel += 1;
       toast(`${game.state.player.className} rang ${game.state.player.classLevel}`, 'level');
       if (game.state.player.className === 'Aventurier' && game.state.player.classLevel === 20) {
+        game.state.player.classXp = 0;
         toast('Les mentors de Solenne vous attendent au cristal.', 'level');
+        spawnEffect('level', game.player.px, game.player.py - .4, .9);
+        break;
       }
       needed = classXpNeeded(game.state.player.classLevel);
     }
@@ -698,10 +839,34 @@
     toast(`${item.name} équipé`, 'loot'); saveGame(); openInventory(); syncUi(true);
   }
 
-  function rollClassChoice(className) {
+  function resetClassConfirmation() {
+    game.pendingClassChoice = null;
+    ui.classGrid.hidden = false;
+    ui.classConfirmation.hidden = true;
+  }
+
+  function openClassSelection() {
+    resetClassConfirmation();
+    openModal(ui.classModal);
+  }
+
+  function requestClassChoice(className) {
+    if (!Object.hasOwn(CLASS_DEFS, className) || className === 'Aventurier') return;
+    if (game.state.player.className !== 'Aventurier' || game.state.player.classLevel < 20 || game.state.classChoiceLocked) return;
+    game.pendingClassChoice = className;
+    ui.classConfirmName.textContent = className;
+    ui.classGrid.hidden = true;
+    ui.classConfirmation.hidden = false;
+  }
+
+  function rollClassChoice(className = game.pendingClassChoice) {
+    if (!Object.hasOwn(CLASS_DEFS, className) || className === 'Aventurier') return;
     if (game.state.player.className !== 'Aventurier' || game.state.player.classLevel < 20 || game.state.classChoiceLocked) return;
     game.state.player.className = className; game.state.player.classLevel = 1; game.state.player.classXp = 0;
     game.state.classChoiceLocked = true;
+    game.player.hp = maxHp(); game.player.mp = maxMp();
+    spawnEffect('level', game.player.px, game.player.py - .35, .9);
+    resetClassConfirmation();
     closeModal(ui.classModal);
     toast(`Vous êtes désormais ${className}. Le choix est permanent.`, 'level');
     saveGame(); syncUi(true);
@@ -727,8 +892,8 @@
 
   function updateCamera(dt) {
     const worldW = game.map.width * TILE, worldH = game.map.height * TILE;
-    game.camera.targetX = clamp(game.player.px * TILE + TILE / 2 - game.viewport.w / 2, 0, Math.max(0, worldW - game.viewport.w));
-    game.camera.targetY = clamp(game.player.py * TILE + TILE / 2 - game.viewport.h / 2, 0, Math.max(0, worldH - game.viewport.h));
+    game.camera.targetX = clamp(game.player.px * TILE + TILE / 2 - visibleWorldWidth() / 2, 0, Math.max(0, worldW - visibleWorldWidth()));
+    game.camera.targetY = clamp(game.player.py * TILE + TILE / 2 - visibleWorldHeight() / 2, 0, Math.max(0, worldH - visibleWorldHeight()));
     const ease = 1 - Math.pow(.0005, dt);
     game.camera.x = lerp(game.camera.x, game.camera.targetX, ease);
     game.camera.y = lerp(game.camera.y, game.camera.targetY, ease);
@@ -749,26 +914,28 @@
     return info.start + index;
   }
 
-  function screenX(worldX) { return worldX * TILE + TILE / 2 - game.camera.x; }
-  function screenY(worldY) { return worldY * TILE + TILE - game.camera.y; }
+  function screenX(worldX) { return (worldX * TILE + TILE / 2 - game.camera.x) * WORLD_SCALE; }
+  function screenY(worldY) { return (worldY * TILE + TILE - game.camera.y) * WORLD_SCALE; }
 
   function drawSprite(image, sx, sy, sw, sh, worldX, worldY, dw = sw, dh = sh) {
-    const x = Math.round(screenX(worldX) - dw / 2);
-    const y = Math.round(screenY(worldY) - dh);
-    ctx.drawImage(image, sx, sy, sw, sh, x, y, dw, dh);
+    const displayW = dw * WORLD_SCALE, displayH = dh * WORLD_SCALE;
+    const x = Math.round(screenX(worldX) - displayW / 2);
+    const y = Math.round(screenY(worldY) - displayH);
+    ctx.drawImage(image, sx, sy, sw, sh, x, y, displayW, displayH);
   }
 
   function drawWorld() {
     const { w, h } = game.viewport;
     ctx.clearRect(0, 0, w, h);
-    ctx.drawImage(game.assets.mapBase, game.camera.x, game.camera.y, w, h, 0, 0, w, h);
+    ctx.drawImage(game.assets.mapBase, game.camera.x, game.camera.y, visibleWorldWidth(), visibleWorldHeight(), 0, 0, w, h);
 
     if (game.state.settings.grid) {
       ctx.strokeStyle = 'rgba(18,55,28,.25)'; ctx.lineWidth = 1;
-      const startX = -((game.camera.x % TILE) + TILE) % TILE;
-      const startY = -((game.camera.y % TILE) + TILE) % TILE;
-      for (let x = startX; x < w; x += TILE) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
-      for (let y = startY; y < h; y += TILE) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+      const step = TILE * WORLD_SCALE;
+      const startX = -((((game.camera.x * WORLD_SCALE) % step) + step) % step);
+      const startY = -((((game.camera.y * WORLD_SCALE) % step) + step) % step);
+      for (let x = startX; x < w; x += step) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+      for (let y = startY; y < h; y += step) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
     }
 
     const target = selectedMonster();
@@ -782,22 +949,21 @@
     }
     drawProjectiles();
     drawEffects();
-    ctx.drawImage(game.assets.mapOverlay, game.camera.x, game.camera.y, w, h, 0, 0, w, h);
+    ctx.drawImage(game.assets.mapOverlay, game.camera.x, game.camera.y, visibleWorldWidth(), visibleWorldHeight(), 0, 0, w, h);
     drawWorldLabels();
   }
 
   function drawTargetRing(monster) {
     const x = screenX(monster.px), y = screenY(monster.py) - 3;
     ctx.save(); ctx.strokeStyle = '#ffd56e'; ctx.lineWidth = 2; ctx.globalAlpha = .85;
-    ctx.beginPath(); ctx.ellipse(x, y, 19, 7, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    ctx.beginPath(); ctx.ellipse(x, y, 19 * WORLD_SCALE, 7 * WORLD_SCALE, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
   }
 
   function drawDestinationRing(tile) {
     const x = screenX(tile.x), y = screenY(tile.y) - 3;
     ctx.save(); ctx.strokeStyle = '#d5f4d0'; ctx.lineWidth = 2; ctx.globalAlpha = .55 + Math.sin(performance.now()/180)*.2;
-    ctx.beginPath(); ctx.ellipse(x,y,12,5,0,0,Math.PI*2); ctx.stroke(); ctx.restore();
+    ctx.beginPath(); ctx.ellipse(x,y,12 * WORLD_SCALE,5 * WORLD_SCALE,0,0,Math.PI*2); ctx.stroke(); ctx.restore();
   }
-
   function drawPlayer() {
     const p = game.player;
     const frame = getFrame(p.state, p.stateTime, HERO_STATES);
@@ -811,10 +977,12 @@
     const frame = getFrame(state, monster.stateTime, MONSTER_STATES);
     drawSprite(game.assets.monsters, frame * 48, row * 48, 48, 48, monster.px, monster.py, 48, 48);
     if (!monster.dead) {
-      const x = screenX(monster.px), y = screenY(monster.py) - 51;
-      ctx.font = '800 10px ui-rounded, system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillStyle = 'rgba(6,15,10,.82)'; ctx.fillRect(Math.round(x-42),Math.round(y-9),84,15);
-      ctx.fillStyle = '#fff8e9'; ctx.fillText(`${MONSTER_DEFS[monster.type].name} · Niv. ${monster.level}`, x, y-1);
+      const x = screenX(monster.px), y = screenY(monster.py) - 40;
+      ctx.font = '800 9px ui-rounded, system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const label = `${MONSTER_DEFS[monster.type].name} · Niv. ${monster.level}`;
+      const labelWidth = Math.max(68, Math.ceil(ctx.measureText(label).width + 12));
+      ctx.fillStyle = 'rgba(6,15,10,.82)'; ctx.fillRect(Math.round(x-labelWidth/2),Math.round(y-8),labelWidth,14);
+      ctx.fillStyle = '#fff8e9'; ctx.fillText(label, x, y-1);
       if (monster.hp < monster.maxHp || game.selectedMonsterId === monster.id) {
         ctx.fillStyle = '#111c16'; ctx.fillRect(Math.round(x-28),Math.round(y+9),56,5);
         ctx.fillStyle = '#d85b63'; ctx.fillRect(Math.round(x-27),Math.round(y+10),54 * clamp(monster.hp/monster.maxHp,0,1),3);
@@ -846,8 +1014,8 @@
 
   function drawWorldLabels() {
     const p = game.player;
-    const x=screenX(p.px), y=screenY(p.py)-58;
-    ctx.save(); ctx.font='900 11px ui-rounded,system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    const x=screenX(p.px), y=screenY(p.py)-45;
+    ctx.save(); ctx.font='900 10px ui-rounded,system-ui'; ctx.textAlign='center'; ctx.textBaseline='middle';
     const label=`${game.state.player.name} · Niv. ${game.state.player.level}`;
     const width=ctx.measureText(label).width+18;
     ctx.fillStyle='rgba(7,18,12,.80)'; ctx.fillRect(Math.round(x-width/2),Math.round(y-8),Math.round(width),17);
@@ -855,12 +1023,13 @@
     ctx.restore();
 
     const mentor = game.map.mentor;
-    const mx=screenX(mentor.x), my=screenY(mentor.y)-48;
+    const mx=screenX(mentor.x), my=screenY(mentor.y)-39;
     if (mx > -100 && mx < game.viewport.w+100 && my > -50 && my < game.viewport.h+50) {
       ctx.save(); ctx.font='900 10px ui-rounded,system-ui'; ctx.textAlign='center';
       ctx.fillStyle='rgba(6,25,21,.82)'; ctx.fillRect(mx-55,my-12,110,18);
-      ctx.fillStyle=game.state.player.classLevel>=20 && game.state.player.className==='Aventurier'?'#ffe083':'#a9d9c6';
-      ctx.fillText(game.state.player.classLevel>=20?'Cristal des mentors':'Mentors · Rang 20',mx,my+1); ctx.restore();
+      const mentorReady = game.state.player.className === 'Aventurier' && game.state.player.classLevel >= 20 && !game.state.classChoiceLocked;
+      ctx.fillStyle=mentorReady?'#ffe083':'#a9d9c6';
+      ctx.fillText(mentorReady?'Cristal des mentors':'Mentors · Rang 20',mx,my+1); ctx.restore();
     }
   }
 
@@ -885,7 +1054,10 @@
 
   function canvasToWorld(event) {
     const rect = canvas.getBoundingClientRect();
-    return { x: (event.clientX - rect.left) + game.camera.x, y: (event.clientY - rect.top) + game.camera.y };
+    return {
+      x: (event.clientX - rect.left) / WORLD_SCALE + game.camera.x,
+      y: (event.clientY - rect.top) / WORLD_SCALE + game.camera.y
+    };
   }
 
   function onWorldPointer(event) {
@@ -897,13 +1069,11 @@
     for (const monster of game.monsters) {
       if (monster.dead) continue;
       const d = Math.hypot(point.x - (monster.px*TILE+TILE/2), point.y - (monster.py*TILE+TILE-22));
-      if (d < 30 && d < best) { chosen = monster; best = d; }
+      if (d < 38 && d < best) { chosen = monster; best = d; }
     }
     if (chosen) {
-      const weapon = WEAPONS[game.state.player.weapon];
       game.selectedMonsterId = chosen.id;
-      setPlayerPath(chosen, Math.max(1, Math.floor(weapon.range)), chosen.id);
-      game.player.path = findPath(game.player, chosen, Math.max(1, Math.floor(weapon.range)), {ignoreMonsterId:chosen.id});
+      setPlayerPath(chosen, Math.max(1, Math.floor(weaponRange(game.state.player.weapon))), chosen.id);
       ui.worldHint.textContent = `Cible : ${MONSTER_DEFS[chosen.type].name}`;
       syncUi(true);
       return;
@@ -933,13 +1103,14 @@
     canvas.addEventListener('pointerdown', onWorldPointer, { passive: false });
     window.addEventListener('resize', resize, { passive: true });
     window.addEventListener('orientationchange', () => setTimeout(resize, 150), { passive: true });
+    window.visualViewport?.addEventListener('resize', resize, { passive: true });
     window.addEventListener('pagehide', saveGame);
     document.addEventListener('visibilitychange', () => { if (document.hidden) saveGame(); game.lastTime=performance.now(); });
 
     $$('.weapon-button').forEach(button => button.addEventListener('click', () => {
       game.state.player.weapon=button.dataset.weapon; game.player.pendingAttack=null; game.player.state='idle';
       const target=selectedMonster();
-      if (target) game.player.path=findPath(game.player,target,Math.max(1,Math.floor(WEAPONS[button.dataset.weapon].range)),{ignoreMonsterId:target.id});
+      if (target) setPlayerPath(target,Math.max(1,Math.floor(weaponRange(button.dataset.weapon))),target.id);
       saveGame(); syncUi(true);
     }));
     $('#inventory-button').addEventListener('click',openInventory);
@@ -949,8 +1120,10 @@
     ui.drawerBackdrop.addEventListener('click',closeDrawer);
     $('#settings-button').addEventListener('click',()=>openModal(ui.settingsModal));
     $('#settings-close').addEventListener('click',()=>closeModal(ui.settingsModal));
-    $('#class-cancel').addEventListener('click',()=>closeModal(ui.classModal));
-    $$('#class-modal [data-class]').forEach(button=>button.addEventListener('click',()=>rollClassChoice(button.dataset.class)));
+    $('#class-cancel').addEventListener('click',()=>{resetClassConfirmation();closeModal(ui.classModal);});
+    $('#class-back').addEventListener('click',resetClassConfirmation);
+    $('#class-confirm').addEventListener('click',()=>rollClassChoice());
+    $$('#class-modal [data-class]').forEach(button=>button.addEventListener('click',()=>requestClassChoice(button.dataset.class)));
     ui.effectsToggle.addEventListener('change',()=>{game.state.settings.effects=ui.effectsToggle.checked;saveGame();});
     ui.gridToggle.addEventListener('change',()=>{game.state.settings.grid=ui.gridToggle.checked;saveGame();});
     $('#reset-save').addEventListener('click',()=>{
@@ -983,7 +1156,8 @@
       const needed=masteryXpNeeded(m.level), bonus=equipmentStats()[name]||0;
       return `<article class="stat-card"><small>${labels[name]}</small><strong>${m.level}${bonus?` <em>+${bonus}</em>`:''}</strong><span>${m.xp}/${needed} XP</span><div class="mini-progress"><i style="width:${clamp(m.xp/needed*100,0,100)}%"></i></div></article>`;
     }).join('');
-    ui.drawerContent.innerHTML=`<div class="stat-grid">${cards}<article class="stat-card"><small>Vitesse</small><strong>${playerSpeed()}</strong><span>+1 par niveau général</span></article><article class="stat-card"><small>Défense effective</small><strong>${defenseValue()}</strong><span>Maîtrise + équipement</span></article></div><h3 class="section-title">Progression</h3><div class="equipment-card"><span>Niveau général</span><b>${game.state.player.level}</b></div><div class="equipment-card"><span>${game.state.player.className}</span><b>Rang ${game.state.player.classLevel}</b></div><div class="equipment-card"><span>Prochaine évolution</span><b>${game.state.player.className==='Aventurier'?'Mentor au rang 20':'Voie avancée au rang 50'}</b></div>`;
+    const classInfo=classDefinition();
+    ui.drawerContent.innerHTML=`<div class="stat-grid">${cards}<article class="stat-card"><small>Vitesse</small><strong>${playerSpeed()}</strong><span>+1 par niveau général</span></article><article class="stat-card"><small>Défense effective</small><strong>${defenseValue()}</strong><span>Maîtrise + équipement</span></article></div><h3 class="section-title">Progression</h3><div class="equipment-card"><span>Niveau général</span><b>${game.state.player.level}</b></div><div class="equipment-card"><span>${game.state.player.className}</span><b>Rang ${game.state.player.classLevel}</b></div><div class="equipment-card"><span>Spécialité</span><b>${classInfo.summary}</b></div><div class="equipment-card"><span>Prochaine évolution</span><b>${game.state.player.className==='Aventurier'?'Mentor au rang 20':'À venir'}</b></div>`;
     openDrawer();
   }
 
@@ -1011,12 +1185,13 @@
     game.uiDirty=false;
     const p=game.state.player, player=game.player;
     const hpMax=maxHp(), mpMax=maxMp(), xpNeed=generalXpNeeded(p.level), classNeed=classXpNeeded(p.classLevel);
+    const classReady=p.className==='Aventurier' && p.classLevel>=20 && !game.state.classChoiceLocked;
     ui.zoneName.textContent=game.zoneName;ui.playerName.textContent=p.name;ui.className.textContent=p.className;
     ui.generalLevel.textContent=p.level;ui.classLevel.textContent=p.classLevel;
     ui.hpBar.style.width=`${clamp(player.hp/hpMax*100,0,100)}%`;ui.hpText.textContent=`${Math.ceil(player.hp)}/${hpMax}`;
     ui.mpBar.style.width=`${clamp(player.mp/mpMax*100,0,100)}%`;ui.mpText.textContent=`${Math.floor(player.mp)}/${mpMax}`;
     ui.xpBar.style.width=`${clamp(p.xp/xpNeed*100,0,100)}%`;ui.xpText.textContent=`${p.xp}/${xpNeed}`;
-    ui.classXpBar.style.width=`${clamp(p.classXp/classNeed*100,0,100)}%`;ui.classXpText.textContent=`${p.classXp}/${classNeed}`;
+    ui.classXpBar.style.width=classReady?'100%':`${clamp(p.classXp/classNeed*100,0,100)}%`;ui.classXpText.textContent=classReady?'Mentor':`${p.classXp}/${classNeed}`;
     ui.gold.textContent=p.gold;ui.potionCount.textContent=game.state.inventory.potion||0;
     ui.inventoryCount.textContent=Object.values(game.state.inventory).reduce((sum,n)=>sum+n,0);
     $$('.weapon-button').forEach(button=>button.classList.toggle('selected',button.dataset.weapon===p.weapon));
@@ -1042,16 +1217,37 @@
     get monsters() { return game.monsters; },
     get camera() { return game.camera; },
     get viewport() { return game.viewport; },
+    worldScale: WORLD_SCALE,
+    tileSize: TILE,
+    worldToScreen(x,y,anchorY=.5) {
+      return {x:(x*TILE+TILE/2-game.camera.x)*WORLD_SCALE,y:(y*TILE+TILE*anchorY-game.camera.y)*WORLD_SCALE};
+    },
+    combatProfile() {
+      return {
+        className:game.state.player.className,
+        maxHp:maxHp(),maxMp:maxMp(),
+        ranges:Object.fromEntries(Object.keys(WEAPONS).map(name=>[name,weaponRange(name)])),
+        damageMultipliers:Object.fromEntries(['melee','ranged','magic'].map(name=>[name,classDamageMultiplier(name)])),
+        classSummary:classDefinition().summary
+      };
+    },
+    monsterCatalog() {
+      return game.monsters.map(monster=>({id:monster.id,type:monster.type,level:monster.level,maxHp:monster.maxHp,damage:monsterDamage(monster),rewards:monsterRewards(monster)}));
+    },
     snapshot() {
       const player = deepClone(game.state.player);
       if (game.player) { player.x=game.player.x; player.y=game.player.y; player.hp=Math.ceil(game.player.hp); player.mp=Math.floor(game.player.mp); }
-      return { build:BUILD,player,masteries:deepClone(game.state.masteries),inventory:deepClone(game.state.inventory),selected:game.selectedMonsterId,ready:game.ready };
+      return { build:BUILD,player,masteries:deepClone(game.state.masteries),inventory:deepClone(game.state.inventory),classChoiceLocked:game.state.classChoiceLocked,selected:game.selectedMonsterId,ready:game.ready,worldScale:WORLD_SCALE };
     },
     test: {
-      teleport(x,y){if(isWalkable(x,y)){Object.assign(game.player,makeMover(x,y));syncUi(true);}},
+      teleport(x,y){if(!isWalkable(x,y,{actor:game.player}))return false;Object.assign(game.player,makeMover(x,y));syncUi(true);return true;},
       setClassLevel(level){game.state.player.classLevel=level;game.state.player.classXp=0;syncUi(true);},
+      grantClassXp(amount){gainClassXp(amount);syncUi(true);},
       damagePlayer(amount){damagePlayer(amount);},
       killSelected(){const m=selectedMonster();if(m)killMonster(m);},
+      selectMonster(index){const m=game.monsters[index];if(m&&!m.dead){game.selectedMonsterId=m.id;syncUi(true);}},
+      clearTarget(){game.selectedMonsterId=null;game.player.routeTargetId=null;game.player.routeGoalKey=null;game.player.path=[];syncUi(true);},
+      defeatMonster(index){const m=game.monsters[index];if(m&&!m.dead)killMonster(m);},
       grantItem(id,count=1){game.state.inventory[id]=(game.state.inventory[id]||0)+count;syncUi(true);},
       clearSave(){localStorage.removeItem(SAVE_KEY);}
     }

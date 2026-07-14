@@ -1,5 +1,5 @@
-const CACHE='solenne-foundation-1.1.0-f1';
-const FILES=['./','./index.html','./styles.css','./src/game.js','./manifest.webmanifest','./assets/map-base.png','./assets/map-overlay.png','./assets/map-data.json','./assets/hero.png','./assets/monsters.png','./assets/ui.png','./assets/effects.png','./assets/portrait.png'];
+const CACHE='solenne-alpha-1.2.0-a1';
+const FILES=['./','./index.html','./styles.css?v=1.2.0-alpha.1','./src/game.js?v=1.2.0-alpha.1','./manifest.webmanifest?v=1.2.0-alpha.1','./assets/map-base.png?v=1.2.0-alpha.1','./assets/map-overlay.png?v=1.2.0-alpha.1','./assets/map-data.json?v=1.2.0-alpha.1','./assets/hero.png?v=1.2.0-alpha.1','./assets/monsters.png?v=1.2.0-alpha.1','./assets/ui.png?v=1.2.0-alpha.1','./assets/effects.png?v=1.2.0-alpha.1','./assets/portrait.png?v=1.2.0-alpha.1'];
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',event=>{if(event.request.method!=='GET')return;event.respondWith(fetch(event.request).then(response=>{const copy=response.clone();caches.open(CACHE).then(c=>c.put(event.request,copy));return response}).catch(()=>caches.match(event.request).then(r=>r||caches.match('./index.html'))));});
