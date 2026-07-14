@@ -1,8 +1,8 @@
 {
   "name": "chroniques-de-solenne",
-  "version": "1.1.0-foundation.1",
+  "version": "1.2.0-alpha.1",
   "private": true,
-  "description": "Fondation reproductible du MMORPG mobile 2D Chroniques de Solenne.",
+  "description": "MMORPG mobile 2D en pixel art Chroniques de Solenne.",
   "scripts": {
     "assets": "python3 scripts/generate_assets.py",
     "audit": "python3 scripts/audit_assets.py",

@@ -11,8 +11,8 @@
 - [x] Vérification déterministe sur deux générations successives.
 - [x] Validation syntaxique des vrais fragments du moteur.
 - [x] Validation statique du moteur et de ses règles principales.
-- [x] Matrice mobile paysage 667×375, 844×390, 896×414 et 932×430.
-- [x] Contrôle de visibilité des commandes sur les quatre formats.
+- [x] Matrice mobile paysage 667×375, 812×375, 844×390, 896×414 et 932×430.
+- [x] Contrôle de visibilité des commandes sur les cinq formats.
 - [x] Déplacement tactile case par case validé dans Chromium.
 - [x] Bâton, fronde et orbe validés avec dégâts et XP de maîtrise.
 - [x] Inventaire, statistiques, sauvegarde/rechargement, potion, mort et réapparition validés.
@@ -21,7 +21,8 @@
 - [x] Ancien `develop` sauvegardé sous `develop-before-consolidation-20260713`.
 - [x] Fondation consolidée installée sur la branche officielle `develop`.
 - [x] Configuration attendue du projet Vercel unique enregistrée.
+- [x] Refus sûr d’un preview `develop` lorsque `public/` contient encore la production historique.
 - [ ] Projet Vercel historique `chroniques-de-solenne` de nouveau visible dans l’équipe connectée.
-- [ ] Preview `develop` déployée et validée sur le projet Vercel historique.
+- [ ] Release `main` reconstruite dans `public/`, déployée puis validée sur le projet Vercel historique.
 
 La fondation GitHub est clôturée. La publication distante reste bloquée uniquement par l’absence du projet Vercel historique dans l’équipe actuellement connectée. Voir `docs/CURRENT_STATUS.md`.

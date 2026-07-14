@@ -1,34 +1,31 @@
 # Chroniques de Solenne
 
-Fondation officielle du MMORPG mobile 2D en pixel art de **Woulette**.
+MMORPG mobile 2D en pixel art original de **Woulette**, jouable en paysage et piloté au toucher sur une grille.
 
 ## État du dépôt
 
-- `main` : uniquement une version stable validée pour la production.
-- `develop` : consolidation, refonte graphique et tests avant publication.
-- projet Vercel unique attendu : `chroniques-de-solenne`.
+- dépôt officiel : `Woulette/Nouveau-d-p-t-jeu` ;
+- `develop` : développement et validation ;
+- `main` : production uniquement après validation complète ;
+- candidat courant : `1.2.0-alpha.1` sur `develop` ;
+- dernière production historiquement validée : `1.1.0-foundation.1` ;
+- cible Vercel unique attendue : `chroniques-de-solenne`.
 
-Version de fondation : `1.1.0-foundation.1`.
+Le projet Vercel officiel doit être visible et vérifié avant une publication. Aucun autre projet ne doit être utilisé. `voidsector-game` est un autre jeu, totalement hors périmètre.
 
-## Ce que contient cette fondation
+## Fonctionnalités du candidat 1.2
 
-- moteur mobile paysage sur grille ;
-- toucher une case pour calculer un chemin et se déplacer case par case ;
-- toucher un monstre pour l’approcher puis l’attaquer automatiquement ;
-- bâton, fronde et orbe magique ;
-- XP générale, XP de classe et quatre maîtrises par action ;
-- vitesse de base 100 puis +1 par niveau général ;
-- inventaire, équipement, butin et sauvegarde locale ;
-- mort et réapparition au village ;
-- choix permanent Épéiste, Archer ou Mage au rang Aventurier 20 ;
-- véritable pipeline d’assets PNG reproductible ;
+- déplacement tactile case par case avec interpolation fluide ;
+- poursuite joueur/monstre recalculée sur les positions engagées et cases réservées ;
+- combat automatique au bâton, à la fronde et à l’orbe ;
+- interface mobile compacte, monde rendu à 75 %, armes regroupées sur le bord gauche ;
+- XP générale, XP de classe et quatre maîtrises ;
+- Ours de Solenne et Sylvain épineux, plus résistants et plus généreux en XP ;
+- évolution permanente au rang Aventurier 20 vers Épéiste, Archer ou Mage ;
+- bonus propres aux trois classes, inventaire, équipement, butin et sauvegarde locale ;
+- mort et réapparition sur une case libre du village ;
+- atlas PNG et carte générés de manière déterministe ;
 - squelette du futur serveur MMO autoritaire.
-
-## Assets
-
-Les PNG ne sont pas dessinés dans l’interface avec des emojis. Ils sont générés à la résolution pixel native par `scripts/generate_assets.py`, puis audités et copiés dans `dist/` pendant le build. La génération est déterministe : deux builds identiques produisent les mêmes sommes SHA-256.
-
-Cette fondation graphique est la base technique de la phase 2. Chaque nouvelle version devra conserver ou améliorer sa qualité. Aucun placeholder ne peut être fusionné sur `main`.
 
 ## Construire
 
@@ -37,14 +34,18 @@ python3 -m pip install -r requirements-build.txt
 python3 scripts/build_all.py
 ```
 
-Le site prêt à publier se trouve dans `dist/`.
+La release reconstruite se trouve dans `dist/`. `public/` est une sortie de production générée par le workflow GitHub après validation de `main` ; elle ne doit jamais être modifiée à la main.
 
 ## Vérifier
 
 ```bash
-python3 tests/reproducibility.py
-python3 scripts/build_single_file.py
-python3 tests/mobile_qa.py
+npm run check
+npm run test:repro
+npm run build
+npm run build:standalone
+npm run test:mobile
 ```
 
-La QA mobile utilise Chromium/Playwright et vérifie les formats paysage 667×375, 844×390, 896×414 et 932×430.
+La QA mobile vérifie les formats paysage 667×375, 812×375, 844×390, 896×414 et 932×430, ainsi que le mouvement, les réservations, les combats, les classes, les nouveaux monstres, la sauvegarde et les contrôles tactiles.
+
+Les règles de reprise et de sécurité sont décrites dans `docs/NEXT_CHAT_HANDOFF.md`, `docs/CURRENT_STATUS.md` et `docs/INFRASTRUCTURE_PROTECTION.md`.

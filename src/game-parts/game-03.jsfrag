@@ -60,13 +60,17 @@
       const playerDistance = distance(monster, game.player);
       if (!game.player.dying && (monster.aggro || playerDistance <= MONSTER_DEFS[monster.type].aggro)) monster.aggro = true;
       if (monster.aggro && !game.player.dying) {
-        if (playerDistance <= 1.25 && monster.attackCooldown <= 0) startMonsterAttack(monster);
-        else if (playerDistance > 1.1) {
-          if (!monster.path.length && !monster.to) monster.path = findPath(monster, game.player, 1, { ignoreMonsters: true });
+        if (!monster.to && playerDistance <= 1.25 && monster.attackCooldown <= 0) startMonsterAttack(monster);
+        else {
+          ensureChasePath(monster, game.player, 1);
           if (updateMovement(monster, dt, false)) monster.stateTime += dt;
           else { monster.state = 'idle'; monster.stateTime += dt; }
         }
-        if (playerDistance > 10) { monster.aggro = false; monster.path = []; }
+        if (playerDistance > 10) {
+          monster.aggro = false;
+          monster.routeTargetId = null;
+          stopMovement(monster);
+        }
       } else {
         if (updateMovement(monster, dt, false)) monster.stateTime += dt;
         else {
@@ -74,7 +78,9 @@
           if (t >= monster.wanderAt) {
             monster.wanderAt = t + 2 + Math.random() * 5;
             const goal = { x: clamp(monster.spawnX + randomInt(-3, 3), 1, game.map.width - 2), y: clamp(monster.spawnY + randomInt(-3, 3), 1, game.map.height - 2) };
-            monster.path = findPath(monster, goal, 0, { ignoreMonsters: true });
+            monster.routeTargetId = null;
+            monster.routeGoalKey = null;
+            monster.path = findPath(committedTile(monster), goal, 0, { actor: monster });
           }
         }
       }
@@ -82,11 +88,12 @@
   }
 
   function startMonsterAttack(monster) {
+    if (monster.to) return;
     stopMovement(monster);
     faceToward(monster, game.player);
     const def = MONSTER_DEFS[monster.type];
     monster.state = 'attack'; monster.stateTime = 0; monster.attackCooldown = def.attackRate;
-    monster.pendingAttack = { hitAt: .42, duration: .70, fired: false, damage: def.damage + Math.floor(monster.level * .7) };
+    monster.pendingAttack = { hitAt: .42, duration: .70, fired: false, damage: monsterDamage(monster) };
   }
 
   function damagePlayer(rawDamage) {
@@ -105,15 +112,22 @@
     if (game.player.dying) return;
     stopMovement(game.player);
     game.player.hp = 0; game.player.dying = true; game.player.state = 'death'; game.player.stateTime = 0; game.player.respawnTimer = 2.2;
+    game.player.routeTargetId = null;
     game.selectedMonsterId = null;
     ui.deathVignette.classList.add('show');
-    for (const monster of game.monsters) { monster.aggro = false; monster.path = []; monster.pendingAttack = null; }
+    for (const monster of game.monsters) {
+      monster.aggro = false;
+      monster.pendingAttack = null;
+      monster.routeTargetId = null;
+      stopMovement(monster);
+    }
     saveGame(); syncUi(true);
   }
 
   function respawnPlayer() {
     const respawn = game.map.villageRespawn;
-    Object.assign(game.player, makeMover(respawn.x, respawn.y));
+    const safeRespawn = nearestWalkable(respawn, { actor: game.player }, 6) || respawn;
+    Object.assign(game.player, makeMover(safeRespawn.x, safeRespawn.y));
     game.player.hp = maxHp(); game.player.mp = maxMp(); game.player.state = 'idle'; game.player.stateTime = 0;
     game.player.dying = false; game.player.respawnTimer = 0; game.player.pendingAttack = null; game.player.attackCooldown = .5;
     ui.deathVignette.classList.remove('show');
@@ -122,12 +136,12 @@
   }
 
   function killMonster(monster) {
-    monster.hp = 0; monster.dead = true; monster.state = 'death'; monster.stateTime = 0; monster.path = []; monster.pendingAttack = null;
+    stopMovement(monster);
+    monster.hp = 0; monster.dead = true; monster.state = 'death'; monster.stateTime = 0; monster.pendingAttack = null;
     monster.respawnAt = now() + 10 + Math.random() * 7;
     if (game.selectedMonsterId === monster.id) game.selectedMonsterId = null;
     const def = MONSTER_DEFS[monster.type];
-    const generalXp = def.xp + monster.level * 5;
-    const classXp = def.classXp + monster.level * 3;
+    const { generalXp, classXp } = monsterRewards(monster);
     const gold = randomInt(def.gold[0], def.gold[1]);
     gainGeneralXp(generalXp); gainClassXp(classXp); game.state.player.gold += gold;
     toast(`+${generalXp} XP · +${classXp} classe · +${gold} or`, 'loot');
@@ -136,10 +150,14 @@
   }
 
   function respawnMonster(monster) {
-    const def = MONSTER_DEFS[monster.type];
+    if (!isWalkable(monster.spawnX, monster.spawnY, { actor: monster })) {
+      monster.respawnAt = now() + 1;
+      return;
+    }
     monster.dead = false; monster.x = monster.spawnX; monster.y = monster.spawnY; monster.px = monster.x; monster.py = monster.y;
     monster.path = []; monster.to = null; monster.from = null; monster.state = 'idle'; monster.stateTime = 0; monster.aggro = false;
-    monster.maxHp = def.hp + Math.max(0, monster.level - 1) * 9; monster.hp = monster.maxHp;
+    monster.routeTargetId = null; monster.routeGoalKey = null; monster.repathAt = 0;
+    monster.maxHp = monsterMaxHp(monster.type, monster.level); monster.hp = monster.maxHp;
   }
 
   function gainGeneralXp(amount) {

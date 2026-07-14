@@ -1,3 +1,8 @@
+    if (game.state.player.className === 'Aventurier' && game.state.player.classLevel >= 20) {
+      game.state.player.classLevel = 20;
+      game.state.player.classXp = 0;
+      return;
+    }
     game.state.player.classXp += amount;
     let needed = classXpNeeded(game.state.player.classLevel);
     while (game.state.player.classXp >= needed) {
@@ -5,7 +10,10 @@
       game.state.player.classLevel += 1;
       toast(`${game.state.player.className} rang ${game.state.player.classLevel}`, 'level');
       if (game.state.player.className === 'Aventurier' && game.state.player.classLevel === 20) {
+        game.state.player.classXp = 0;
         toast('Les mentors de Solenne vous attendent au cristal.', 'level');
+        spawnEffect('level', game.player.px, game.player.py - .4, .9);
+        break;
       }
       needed = classXpNeeded(game.state.player.classLevel);
     }
@@ -58,10 +66,34 @@
     toast(`${item.name} équipé`, 'loot'); saveGame(); openInventory(); syncUi(true);
   }
 
-  function rollClassChoice(className) {
+  function resetClassConfirmation() {
+    game.pendingClassChoice = null;
+    ui.classGrid.hidden = false;
+    ui.classConfirmation.hidden = true;
+  }
+
+  function openClassSelection() {
+    resetClassConfirmation();
+    openModal(ui.classModal);
+  }
+
+  function requestClassChoice(className) {
+    if (!Object.hasOwn(CLASS_DEFS, className) || className === 'Aventurier') return;
+    if (game.state.player.className !== 'Aventurier' || game.state.player.classLevel < 20 || game.state.classChoiceLocked) return;
+    game.pendingClassChoice = className;
+    ui.classConfirmName.textContent = className;
+    ui.classGrid.hidden = true;
+    ui.classConfirmation.hidden = false;
+  }
+
+  function rollClassChoice(className = game.pendingClassChoice) {
+    if (!Object.hasOwn(CLASS_DEFS, className) || className === 'Aventurier') return;
     if (game.state.player.className !== 'Aventurier' || game.state.player.classLevel < 20 || game.state.classChoiceLocked) return;
     game.state.player.className = className; game.state.player.classLevel = 1; game.state.player.classXp = 0;
     game.state.classChoiceLocked = true;
+    game.player.hp = maxHp(); game.player.mp = maxMp();
+    spawnEffect('level', game.player.px, game.player.py - .35, .9);
+    resetClassConfirmation();
     closeModal(ui.classModal);
     toast(`Vous êtes désormais ${className}. Le choix est permanent.`, 'level');
     saveGame(); syncUi(true);
@@ -87,8 +119,8 @@
 
   function updateCamera(dt) {
     const worldW = game.map.width * TILE, worldH = game.map.height * TILE;
-    game.camera.targetX = clamp(game.player.px * TILE + TILE / 2 - game.viewport.w / 2, 0, Math.max(0, worldW - game.viewport.w));
-    game.camera.targetY = clamp(game.player.py * TILE + TILE / 2 - game.viewport.h / 2, 0, Math.max(0, worldH - game.viewport.h));
+    game.camera.targetX = clamp(game.player.px * TILE + TILE / 2 - visibleWorldWidth() / 2, 0, Math.max(0, worldW - visibleWorldWidth()));
+    game.camera.targetY = clamp(game.player.py * TILE + TILE / 2 - visibleWorldHeight() / 2, 0, Math.max(0, worldH - visibleWorldHeight()));
     const ease = 1 - Math.pow(.0005, dt);
     game.camera.x = lerp(game.camera.x, game.camera.targetX, ease);
     game.camera.y = lerp(game.camera.y, game.camera.targetY, ease);
@@ -109,26 +141,28 @@
     return info.start + index;
   }
 
-  function screenX(worldX) { return worldX * TILE + TILE / 2 - game.camera.x; }
-  function screenY(worldY) { return worldY * TILE + TILE - game.camera.y; }
+  function screenX(worldX) { return (worldX * TILE + TILE / 2 - game.camera.x) * WORLD_SCALE; }
+  function screenY(worldY) { return (worldY * TILE + TILE - game.camera.y) * WORLD_SCALE; }
 
   function drawSprite(image, sx, sy, sw, sh, worldX, worldY, dw = sw, dh = sh) {
-    const x = Math.round(screenX(worldX) - dw / 2);
-    const y = Math.round(screenY(worldY) - dh);
-    ctx.drawImage(image, sx, sy, sw, sh, x, y, dw, dh);
+    const displayW = dw * WORLD_SCALE, displayH = dh * WORLD_SCALE;
+    const x = Math.round(screenX(worldX) - displayW / 2);
+    const y = Math.round(screenY(worldY) - displayH);
+    ctx.drawImage(image, sx, sy, sw, sh, x, y, displayW, displayH);
   }
 
   function drawWorld() {
     const { w, h } = game.viewport;
     ctx.clearRect(0, 0, w, h);
-    ctx.drawImage(game.assets.mapBase, game.camera.x, game.camera.y, w, h, 0, 0, w, h);
+    ctx.drawImage(game.assets.mapBase, game.camera.x, game.camera.y, visibleWorldWidth(), visibleWorldHeight(), 0, 0, w, h);
 
     if (game.state.settings.grid) {
       ctx.strokeStyle = 'rgba(18,55,28,.25)'; ctx.lineWidth = 1;
-      const startX = -((game.camera.x % TILE) + TILE) % TILE;
-      const startY = -((game.camera.y % TILE) + TILE) % TILE;
-      for (let x = startX; x < w; x += TILE) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
-      for (let y = startY; y < h; y += TILE) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
+      const step = TILE * WORLD_SCALE;
+      const startX = -((((game.camera.x * WORLD_SCALE) % step) + step) % step);
+      const startY = -((((game.camera.y * WORLD_SCALE) % step) + step) % step);
+      for (let x = startX; x < w; x += step) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
+      for (let y = startY; y < h; y += step) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
     }
 
     const target = selectedMonster();
@@ -142,19 +176,18 @@
     }
     drawProjectiles();
     drawEffects();
-    ctx.drawImage(game.assets.mapOverlay, game.camera.x, game.camera.y, w, h, 0, 0, w, h);
+    ctx.drawImage(game.assets.mapOverlay, game.camera.x, game.camera.y, visibleWorldWidth(), visibleWorldHeight(), 0, 0, w, h);
     drawWorldLabels();
   }
 
   function drawTargetRing(monster) {
     const x = screenX(monster.px), y = screenY(monster.py) - 3;
     ctx.save(); ctx.strokeStyle = '#ffd56e'; ctx.lineWidth = 2; ctx.globalAlpha = .85;
-    ctx.beginPath(); ctx.ellipse(x, y, 19, 7, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    ctx.beginPath(); ctx.ellipse(x, y, 19 * WORLD_SCALE, 7 * WORLD_SCALE, 0, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
   }
 
   function drawDestinationRing(tile) {
     const x = screenX(tile.x), y = screenY(tile.y) - 3;
     ctx.save(); ctx.strokeStyle = '#d5f4d0'; ctx.lineWidth = 2; ctx.globalAlpha = .55 + Math.sin(performance.now()/180)*.2;
-    ctx.beginPath(); ctx.ellipse(x,y,12,5,0,0,Math.PI*2); ctx.stroke(); ctx.restore();
+    ctx.beginPath(); ctx.ellipse(x,y,12 * WORLD_SCALE,5 * WORLD_SCALE,0,0,Math.PI*2); ctx.stroke(); ctx.restore();
   }
-

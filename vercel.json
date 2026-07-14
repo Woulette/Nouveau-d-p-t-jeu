@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "",
-  "buildCommand": "test -s public/index.html && test -s public/src/game.js && test -s public/assets/hero.png && echo 'Validated Chroniques de Solenne static release ready'",
+  "buildCommand": "node scripts/verify_vercel_release.js",
   "outputDirectory": "public",
   "cleanUrls": true,
   "headers": [

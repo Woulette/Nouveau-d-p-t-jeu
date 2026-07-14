@@ -23,7 +23,8 @@
       const needed=masteryXpNeeded(m.level), bonus=equipmentStats()[name]||0;
       return `<article class="stat-card"><small>${labels[name]}</small><strong>${m.level}${bonus?` <em>+${bonus}</em>`:''}</strong><span>${m.xp}/${needed} XP</span><div class="mini-progress"><i style="width:${clamp(m.xp/needed*100,0,100)}%"></i></div></article>`;
     }).join('');
-    ui.drawerContent.innerHTML=`<div class="stat-grid">${cards}<article class="stat-card"><small>Vitesse</small><strong>${playerSpeed()}</strong><span>+1 par niveau général</span></article><article class="stat-card"><small>Défense effective</small><strong>${defenseValue()}</strong><span>Maîtrise + équipement</span></article></div><h3 class="section-title">Progression</h3><div class="equipment-card"><span>Niveau général</span><b>${game.state.player.level}</b></div><div class="equipment-card"><span>${game.state.player.className}</span><b>Rang ${game.state.player.classLevel}</b></div><div class="equipment-card"><span>Prochaine évolution</span><b>${game.state.player.className==='Aventurier'?'Mentor au rang 20':'Voie avancée au rang 50'}</b></div>`;
+    const classInfo=classDefinition();
+    ui.drawerContent.innerHTML=`<div class="stat-grid">${cards}<article class="stat-card"><small>Vitesse</small><strong>${playerSpeed()}</strong><span>+1 par niveau général</span></article><article class="stat-card"><small>Défense effective</small><strong>${defenseValue()}</strong><span>Maîtrise + équipement</span></article></div><h3 class="section-title">Progression</h3><div class="equipment-card"><span>Niveau général</span><b>${game.state.player.level}</b></div><div class="equipment-card"><span>${game.state.player.className}</span><b>Rang ${game.state.player.classLevel}</b></div><div class="equipment-card"><span>Spécialité</span><b>${classInfo.summary}</b></div><div class="equipment-card"><span>Prochaine évolution</span><b>${game.state.player.className==='Aventurier'?'Mentor au rang 20':'À venir'}</b></div>`;
     openDrawer();
   }
 
@@ -51,12 +52,13 @@
     game.uiDirty=false;
     const p=game.state.player, player=game.player;
     const hpMax=maxHp(), mpMax=maxMp(), xpNeed=generalXpNeeded(p.level), classNeed=classXpNeeded(p.classLevel);
+    const classReady=p.className==='Aventurier' && p.classLevel>=20 && !game.state.classChoiceLocked;
     ui.zoneName.textContent=game.zoneName;ui.playerName.textContent=p.name;ui.className.textContent=p.className;
     ui.generalLevel.textContent=p.level;ui.classLevel.textContent=p.classLevel;
     ui.hpBar.style.width=`${clamp(player.hp/hpMax*100,0,100)}%`;ui.hpText.textContent=`${Math.ceil(player.hp)}/${hpMax}`;
     ui.mpBar.style.width=`${clamp(player.mp/mpMax*100,0,100)}%`;ui.mpText.textContent=`${Math.floor(player.mp)}/${mpMax}`;
     ui.xpBar.style.width=`${clamp(p.xp/xpNeed*100,0,100)}%`;ui.xpText.textContent=`${p.xp}/${xpNeed}`;
-    ui.classXpBar.style.width=`${clamp(p.classXp/classNeed*100,0,100)}%`;ui.classXpText.textContent=`${p.classXp}/${classNeed}`;
+    ui.classXpBar.style.width=classReady?'100%':`${clamp(p.classXp/classNeed*100,0,100)}%`;ui.classXpText.textContent=classReady?'Mentor':`${p.classXp}/${classNeed}`;
     ui.gold.textContent=p.gold;ui.potionCount.textContent=game.state.inventory.potion||0;
     ui.inventoryCount.textContent=Object.values(game.state.inventory).reduce((sum,n)=>sum+n,0);
     $$('.weapon-button').forEach(button=>button.classList.toggle('selected',button.dataset.weapon===p.weapon));
@@ -82,16 +84,37 @@
     get monsters() { return game.monsters; },
     get camera() { return game.camera; },
     get viewport() { return game.viewport; },
+    worldScale: WORLD_SCALE,
+    tileSize: TILE,
+    worldToScreen(x,y,anchorY=.5) {
+      return {x:(x*TILE+TILE/2-game.camera.x)*WORLD_SCALE,y:(y*TILE+TILE*anchorY-game.camera.y)*WORLD_SCALE};
+    },
+    combatProfile() {
+      return {
+        className:game.state.player.className,
+        maxHp:maxHp(),maxMp:maxMp(),
+        ranges:Object.fromEntries(Object.keys(WEAPONS).map(name=>[name,weaponRange(name)])),
+        damageMultipliers:Object.fromEntries(['melee','ranged','magic'].map(name=>[name,classDamageMultiplier(name)])),
+        classSummary:classDefinition().summary
+      };
+    },
+    monsterCatalog() {
+      return game.monsters.map(monster=>({id:monster.id,type:monster.type,level:monster.level,maxHp:monster.maxHp,damage:monsterDamage(monster),rewards:monsterRewards(monster)}));
+    },
     snapshot() {
       const player = deepClone(game.state.player);
       if (game.player) { player.x=game.player.x; player.y=game.player.y; player.hp=Math.ceil(game.player.hp); player.mp=Math.floor(game.player.mp); }
-      return { build:BUILD,player,masteries:deepClone(game.state.masteries),inventory:deepClone(game.state.inventory),selected:game.selectedMonsterId,ready:game.ready };
+      return { build:BUILD,player,masteries:deepClone(game.state.masteries),inventory:deepClone(game.state.inventory),classChoiceLocked:game.state.classChoiceLocked,selected:game.selectedMonsterId,ready:game.ready,worldScale:WORLD_SCALE };
     },
     test: {
-      teleport(x,y){if(isWalkable(x,y)){Object.assign(game.player,makeMover(x,y));syncUi(true);}},
+      teleport(x,y){if(!isWalkable(x,y,{actor:game.player}))return false;Object.assign(game.player,makeMover(x,y));syncUi(true);return true;},
       setClassLevel(level){game.state.player.classLevel=level;game.state.player.classXp=0;syncUi(true);},
+      grantClassXp(amount){gainClassXp(amount);syncUi(true);},
       damagePlayer(amount){damagePlayer(amount);},
       killSelected(){const m=selectedMonster();if(m)killMonster(m);},
+      selectMonster(index){const m=game.monsters[index];if(m&&!m.dead){game.selectedMonsterId=m.id;syncUi(true);}},
+      clearTarget(){game.selectedMonsterId=null;game.player.routeTargetId=null;game.player.routeGoalKey=null;game.player.path=[];syncUi(true);},
+      defeatMonster(index){const m=game.monsters[index];if(m&&!m.dead)killMonster(m);},
       grantItem(id,count=1){game.state.inventory[id]=(game.state.inventory[id]||0)+count;syncUi(true);},
       clearSave(){localStorage.removeItem(SAVE_KEY);}
     }

@@ -23,8 +23,8 @@
 - Le dépôt est actuellement public ; ne pas changer sa visibilité sans accord de l’utilisateur.
 - `main` doit contenir uniquement une version stable, testée et destinée à la production.
 - Branche de sauvegarde existante : `foundation-backup-alpha3`.
-- Branche de consolidation actuelle : `develop-consolidation-work`.
-- Objectif après audit : avoir une branche officielle `develop` propre pour le développement courant.
+- Branche de développement officielle : `develop`.
+- `develop-consolidation-work` est uniquement un jalon historique de la consolidation.
 - Ne jamais écraser une version stable sans branche de sauvegarde ou commit récupérable.
 
 ### Vercel officiel
@@ -105,7 +105,7 @@ Les images générées servant de concept ou de planche d’ambiance ne sont pas
 
 - Téléphone **horizontal, mode paysage**.
 - Prévoir les zones sûres des écrans avec encoche.
-- Afficher une invitation à tourner le téléphone en mode portrait.
+- Si le téléphone est en portrait, afficher une invitation à le tourner en mode paysage.
 
 ### Déplacement
 
@@ -129,8 +129,9 @@ Organisation générale inspirée de la référence :
 - **Haut gauche** : portrait, nom du personnage, zone, classe, niveau général, PV et PM.
 - **Haut droite** : paramètres ; éventuellement mini-carte ou quête lorsqu’il y a assez d’espace.
 - **Bas gauche** : XP générale et XP de classe/métier.
+- **Côté gauche** : rail vertical bâton, fronde et orbe.
 - **Côté droit** : inventaire et statistiques.
-- **Bas droite** : styles de combat et actions tactiles.
+- **Bas droite** : potion séparée.
 - **Centre** : monde, personnage, monstres, noms, niveaux, barres de vie, dégâts et effets.
 
 L’interface ne doit pas cacher la majorité de la carte. Elle doit rester lisible aux formats paysage suivants au minimum :
@@ -200,10 +201,12 @@ Pour chaque famille utilisée dans la tranche verticale :
 Premières familles déjà envisagées ou utilisées :
 
 - Gelée ;
+- Rat ;
 - Sanglier ;
 - Loup ;
 - Feu follet ;
-- éventuellement Rat ou autre monstre faible pour compléter la zone.
+- Ours de Solenne ;
+- Sylvain épineux.
 
 ---
 
@@ -219,6 +222,8 @@ Premières familles déjà envisagées ou utilisées :
 6. Il attaque automatiquement.
 7. Il suit la cible si elle change de case.
 8. Le combat s’arrête lorsque la cible meurt, devient inaccessible, est remplacée ou lorsque le joueur annule.
+
+Pendant la poursuite, chaque acteur recalcule depuis sa case engagée et la case engagée de sa cible. Les cases de départ et de destination sont réservées, et une attaque ne peut commencer que lorsque l’attaquant est stabilisé sur une case.
 
 ### Styles
 
@@ -342,6 +347,7 @@ Recommandation par défaut déjà proposée : butin personnel et partage de l’
 
 Au niveau de classe/métier Aventurier 20 :
 
+- l’Aventurier est plafonné au rang 20 et ne stocke plus d’XP de classe avant son choix ;
 - le joueur rencontre des mentors ;
 - le choix est permanent ;
 - choix de base : **Épéiste**, **Archer**, **Mage** ;
@@ -349,6 +355,12 @@ Au niveau de classe/métier Aventurier 20 :
 - le niveau général est conservé ;
 - les maîtrises sont conservées ;
 - l’inventaire et les équipements sont conservés.
+
+Bonus actuels du premier choix :
+
+- Épéiste : +12 PV et +12 % de dégâts au bâton ;
+- Archer : +12 % de dégâts à la fronde et +0,6 de portée ;
+- Mage : +12 PM et +12 % de dégâts à l’orbe.
 
 ### Évolutions ultérieures
 
@@ -473,15 +485,15 @@ Le PvP n’a pas été explicitement confirmé pour la première version ; par d
 1. Lire ce document en entier.
 2. Inspecter le dépôt `Woulette/Nouveau-d-p-t-jeu`.
 3. Vérifier les branches et le dernier commit réellement présent.
-4. Lire les rapports de fondation et d’assets de la branche `develop-consolidation-work`.
+4. Lire les rapports courants de build, d’assets et de QA de la branche `develop`.
 5. Vérifier l’état réel du projet Vercel avant toute création ou publication.
 6. Faire un court état des lieux honnête, puis reprendre exactement au bon jalon.
 
 ### Branches
 
 - `main` : stable et production uniquement.
-- `develop` : développement officiel après consolidation.
-- `develop-consolidation-work` : branche de consolidation actuelle tant que `develop` n’a pas été validée.
+- `develop` : développement officiel.
+- `develop-consolidation-work` : jalon historique uniquement.
 - `foundation-backup-alpha3` : sauvegarde de l’ancienne base.
 
 ### Avant toute production
@@ -519,36 +531,31 @@ Le PvP n’a pas été explicitement confirmé pour la première version ; par d
 
 ## 17. État technique connu au moment de cette passation
 
-Date de passation : **2026-07-13**.
+Date de passation : **2026-07-14**.
 
 ### GitHub
 
 - Dépôt : `Woulette/Nouveau-d-p-t-jeu`.
-- Branche de consolidation vérifiée : `develop-consolidation-work`.
-- Version déclarée dans `package.json` : `1.1.0-foundation.1`.
+- Branche de développement vérifiée : `develop`.
+- Version candidate déclarée dans `package.json` : `1.2.0-alpha.1`.
 - La branche contient un pipeline d’assets, de build, d’audit, de reproductibilité et de QA mobile.
 - Rapport de fondation présent : `docs/FOUNDATION_REPORT.json`.
 - Audit des assets présent : `docs/ASSET_AUDIT.json`.
 - QA mobile présente : `docs/MOBILE_QA.json`.
-- Le rapport local indique notamment : build reproductible, aucun placeholder historique dans la release, aucun chemin temporaire, tests mobiles PASS.
-- Les assets actuels sont générés de façon déterministe en PNG au build. Ils constituent une fondation technique ; leur niveau artistique doit encore être comparé sévèrement à la référence pendant l’étape 2.
+- Le candidat corrige la poursuite et les réservations, réduit l’échelle du monde, place les armes à gauche, ajoute l’Ours et le Sylvain et finalise les trois choix de classe au rang 20.
+- Les assets actuels sont générés de façon déterministe en PNG au build et leurs URLs sont révisionnées pour éviter un mélange de cache entre releases.
+- Le workflow GitHub officiel a validé sources, assets, build, page autonome, scénarios mobiles et rapports sur le PR `develop` → `main`.
 
 ### Vercel
 
 - Cible unique obligatoire : `chroniques-de-solenne`.
-- Lors de la dernière vérification par connecteur, le projet officiel n’était pas visible dans la liste, tandis qu’un autre projet sans rapport avec le jeu était visible.
-- Conséquence : la liaison ou la création officielle Vercel doit être re-vérifiée. Ne pas considérer la production comme acquise et ne pas créer une série de projets de test.
+- Le bot Vercel du PR GitHub confirme la liaison historique exacte à `chroniques-de-solenne`, mais le connecteur Vercel ne permet toujours pas d’ouvrir ce projet, même avec son identifiant.
+- `vercel.json` utilise un script de garde court compatible avec la limite de 256 caractères et refuse une sortie `public/` ancienne ou non validée.
+- Conséquence : l’accès au projet officiel doit être restauré ou reconnecté avant la production. Ne pas considérer la production comme acquise et ne créer aucun projet de test.
 
 ### Jalon courant
 
-La fondation locale est déclarée PASS dans les rapports du dépôt, mais la clôture opérationnelle doit encore confirmer :
-
-- reconstruction depuis GitHub uniquement ;
-- branche officielle `develop` propre ;
-- unique projet Vercel relié ;
-- QA de l’URL distante.
-
-Après cela, commencer l’étape 2 : **refonte et élévation artistique**, sans régression fonctionnelle.
+Le candidat `1.2.0-alpha.1` sur `develop` est validé localement et par le workflow GitHub officiel. La publication reste bloquée tant que l’unique projet Vercel officiel n’est pas de nouveau visible, puis elle devra être vérifiée sur l’URL distante.
 
 ---
 
@@ -556,16 +563,15 @@ Après cela, commencer l’étape 2 : **refonte et élévation artistique**, san
 
 Le prochain assistant doit effectuer, dans cet ordre :
 
-1. Lire `docs/NEXT_CHAT_HANDOFF.md` sur `develop-consolidation-work`.
+1. Lire `docs/NEXT_CHAT_HANDOFF.md` sur `develop`.
 2. Vérifier le dernier commit et tous les fichiers de cette branche.
 3. Exécuter ou revalider les scripts de build, audit, reproductibilité et QA mobile.
 4. Vérifier que les PNG générés correspondent aux manifestes et ne sont pas des placeholders.
 5. Comparer la capture 896×414 à la référence visuelle de l’utilisateur.
-6. Nettoyer ou intégrer la consolidation dans la branche `develop` sans toucher à `main` tant que la validation n’est pas complète.
-7. Vérifier l’état du seul projet Vercel `chroniques-de-solenne`.
-8. Déployer la branche validée sur ce projet unique et tester l’URL distante.
-9. Donner à l’utilisateur une preuve : commit, branche, capture mobile et rapport de test.
-10. Commencer ensuite l’étape 2 sur `develop`, en améliorant les vrais assets et les animations, jamais en les simplifiant.
+6. Vérifier ou restaurer la visibilité du seul projet Vercel `chroniques-de-solenne`.
+7. Fusionner dans `main`, attendre la sortie `public/` validée, puis tester l’URL distante.
+8. Donner à l’utilisateur une preuve : commit, branche, capture mobile, rapports et déploiement exact.
+9. Continuer ensuite l’étape 2 sur `develop`, sans simplifier les vrais assets ou animations.
 
 ---
 
@@ -573,7 +579,7 @@ Le prochain assistant doit effectuer, dans cet ordre :
 
 L’utilisateur peut écrire :
 
-> Reprends Chroniques de Solenne. Lis d’abord intégralement `docs/NEXT_CHAT_HANDOFF.md` dans le dépôt GitHub `Woulette/Nouveau-d-p-t-jeu`, branche `develop-consolidation-work`. Vérifie l’état réel de GitHub et Vercel avant toute modification. Ne crée aucun nouveau dépôt ni projet Vercel. Reprends au jalon immédiat indiqué dans le document, conserve les vrais assets et ne fais aucune régression graphique.
+> Reprends Chroniques de Solenne. Lis d’abord intégralement `docs/NEXT_CHAT_HANDOFF.md` dans le dépôt GitHub `Woulette/Nouveau-d-p-t-jeu`, branche `develop`. Vérifie l’état réel de GitHub et Vercel avant toute modification. Ne crée aucun nouveau dépôt ni projet Vercel. Reprends au jalon immédiat indiqué dans le document, conserve les vrais assets et ne fais aucune régression graphique.
 
 ---
 

@@ -7,8 +7,8 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Chroniques de Solenne — Alpha</title>
-  <link rel="manifest" href="./manifest.webmanifest" />
-  <link rel="stylesheet" href="./styles.css?v=1.1.0-foundation.1" />
+  <link rel="manifest" href="./manifest.webmanifest?v=1.2.0-alpha.1" />
+  <link rel="stylesheet" href="./styles.css?v=1.2.0-alpha.1" />
 </head>
 <body>
   <main id="game-shell" aria-label="Chroniques de Solenne">
@@ -50,16 +50,19 @@
     <div class="world-hint" id="world-hint"><span class="spark-icon"></span><span id="world-hint-text">Touchez une case ou un monstre</span></div>
 
     <nav class="side-actions" aria-label="Menus du personnage">
-      <button class="menu-button" id="inventory-button"><canvas width="48" height="48" data-icon="bag"></canvas><span>Inventaire</span><small id="inventory-count">2</small></button>
-      <button class="menu-button" id="stats-button"><canvas width="48" height="48" data-icon="stats"></canvas><span>Stats</span></button>
+      <button class="menu-button" id="inventory-button" aria-label="Inventaire"><canvas width="48" height="48" data-icon="bag"></canvas><span>Inventaire</span><small id="inventory-count">2</small></button>
+      <button class="menu-button" id="stats-button" aria-label="Statistiques"><canvas width="48" height="48" data-icon="stats"></canvas><span>Stats</span></button>
     </nav>
 
     <nav class="combat-actions" aria-label="Styles de combat">
       <button class="weapon-button selected" data-weapon="staff"><canvas width="48" height="48" data-icon="staff"></canvas><span>Bâton</span><small>Corps à corps</small></button>
       <button class="weapon-button" data-weapon="sling"><canvas width="48" height="48" data-icon="sling"></canvas><span>Fronde</span><small>Distance</small></button>
       <button class="weapon-button" data-weapon="orb"><canvas width="48" height="48" data-icon="orb"></canvas><span>Orbe</span><small>Magie</small></button>
-      <button class="action-button" id="potion-button"><canvas width="48" height="48" data-icon="potion"></canvas><b id="potion-count">2</b><small>Potions</small></button>
     </nav>
+
+    <div class="utility-actions" aria-label="Objets rapides">
+      <button class="action-button" id="potion-button"><canvas width="48" height="48" data-icon="potion"></canvas><b id="potion-count">2</b><small>Potions</small></button>
+    </div>
 
     <aside class="drawer" id="drawer" aria-hidden="true">
       <header><div><small id="drawer-kicker">Personnage</small><h2 id="drawer-title">Statistiques</h2></div><button id="drawer-close" aria-label="Fermer">×</button></header>
@@ -71,10 +74,15 @@
       <div class="modal-card">
         <small>Mentors de Solenne</small><h2>Choisissez votre voie</h2>
         <p>Ce choix est permanent. Votre niveau général, vos maîtrises et vos objets seront conservés. Votre nouvelle classe recommencera au rang 1.</p>
-        <div class="class-grid">
+        <div class="class-grid" id="class-grid">
           <button data-class="Épéiste"><canvas width="48" height="48" data-icon="sword"></canvas><b>Épéiste</b><small>Puissance et résistance</small></button>
-          <button data-class="Archer"><canvas width="48" height="48" data-icon="archer"></canvas><b>Archer</b><small>Portée et précision</small></button>
+          <button data-class="Archer"><canvas width="48" height="48" data-icon="archer"></canvas><b>Archer</b><small>Portée et puissance</small></button>
           <button data-class="Mage"><canvas width="48" height="48" data-icon="mage"></canvas><b>Mage</b><small>Sorts et maîtrise du mana</small></button>
+        </div>
+        <div class="class-confirmation" id="class-confirmation" hidden>
+          <strong>Devenir <span id="class-confirm-name">Épéiste</span> ?</strong>
+          <p>Cette voie est permanente. Votre classe repartira au rang 1, sans perdre votre niveau général, vos maîtrises ni vos objets.</p>
+          <div><button class="secondary-button" id="class-back">Retour</button><button class="confirm-button" id="class-confirm">Confirmer ma voie</button></div>
         </div>
         <button class="secondary-button" id="class-cancel">Plus tard</button>
       </div>
@@ -93,9 +101,9 @@
     <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
     <div class="death-vignette" id="death-vignette"><strong>Vous êtes tombé au combat…</strong><span>Retour au Village de Solenne</span></div>
     <section class="rotate-overlay"><div class="rotate-device"></div><h1>Tournez votre téléphone</h1><p>Chroniques de Solenne se joue en mode paysage.</p></section>
-    <div class="build-badge">FONDATION · BUILD 1.1.0-foundation.1</div>
+    <div class="build-badge">ALPHA · BUILD 1.2.0-alpha.1</div>
     <div class="fatal-error" id="fatal-error"><b>Le moteur de jeu a rencontré une erreur.</b><span id="fatal-message"></span><button onclick="location.reload()">Recharger</button></div>
   </main>
-  <script src="./src/game.js?v=1.1.0-foundation.1"></script>
+  <script src="./src/game.js?v=1.2.0-alpha.1"></script>
 </body>
 </html>

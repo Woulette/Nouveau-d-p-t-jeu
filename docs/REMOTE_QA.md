@@ -1,14 +1,18 @@
-# Validation du déploiement Vercel
+# Validation distante Vercel
 
-La production `https://chroniques-de-solenne.vercel.app` a été ouverte dans Chromium en émulation mobile paysage 896×414.
+Aucune QA distante de `1.2.0-alpha.1` n’est actuellement validée.
 
-Vérifications effectuées sur le site distant :
+Les anciens contrôles des versions 1.0 et 1.1 sont historiques et ne prouvent pas l’état du candidat courant. La dernière production historiquement validée reste `1.1.0-foundation.1`.
 
-- chargement du build `1.0.0-alpha.3` ;
-- absence d’erreur JavaScript et d’écran d’erreur ;
-- carte, héros, monstres et interface visibles ;
-- changement d’arme vers l’orbe ;
-- déplacement jusqu’à une cible et combat automatique ;
-- diminution des PV du monstre ;
-- ouverture du panneau de statistiques ;
-- contrôle visuel contre les grands aplats verts et le manque de détails.
+Au 14 juillet 2026, le projet officiel `chroniques-de-solenne` n’est pas visible via le connecteur Vercel. L’URL ne doit donc pas être annoncée comme servant la version 1.2, et aucun autre projet ne doit être utilisé.
+
+Après restauration de la cible, vérifier sur le déploiement exact :
+
+1. numéro de build et commit servis ;
+2. absence d’erreur console et d’écran fatal ;
+3. quatre formats paysage ;
+4. poursuite et réservations ;
+5. trois styles, nouvelles familles et récompenses ;
+6. passage au rang 20 et choix de classe sauvegardé ;
+7. sauvegarde, mort, respawn et mise à niveau du cache ;
+8. captures comparées à la référence.

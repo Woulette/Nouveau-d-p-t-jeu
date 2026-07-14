@@ -1,4 +1,7 @@
 node_modules/
+.venv/
+.playwright-browsers/
+.pydeps/
 .vercel/
 .DS_Store
 *.log
@@ -9,3 +12,6 @@ assets/*.json
 dist/
 tests/output/
 tests/*.local.json
+tests/mobile-qa-report.json
+tests/reproducibility-report.json
+tests/static-report.json

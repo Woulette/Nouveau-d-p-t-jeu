@@ -96,11 +96,16 @@ def make_hero_atlas():
 MON_FRAME=48
 MON_STATES={"idle":(0,4,3),"walk":(4,4,7),"attack":(8,6,10),"hit":(14,3,9),"death":(17,6,8)}
 MON_COLS=23
-MON_TYPES=["slime","rat","boar","wolf","wisp"]
+MON_TYPES=["slime","rat","boar","wolf","wisp","bear","treant"]
 
 
 def monster_color(t:int,hit=False):
-    colors=[("#5bad58","#85d174","#34773c"),("#70645f","#9a8880","#4c403d"),("#80513d","#b87854","#4f3028"),("#596662","#82908a","#39433f"),("#59c9cf","#b2ffff","#337c8c")]
+    colors=[
+        ("#5bad58","#85d174","#34773c"),("#70645f","#9a8880","#4c403d"),
+        ("#80513d","#b87854","#4f3028"),("#596662","#82908a","#39433f"),
+        ("#59c9cf","#b2ffff","#337c8c"),("#74513d","#a97855","#493024"),
+        ("#5e783d","#91aa55","#3d512c")
+    ]
     if hit:return "#d75f6a","#ff9ca5","#78343c"
     return colors[t]
 

@@ -5,13 +5,26 @@
   }
 
   function beginStep(entity) {
-    if (entity.to || !entity.path.length) return;
+    if (entity.to || !entity.path.length) return false;
+    const next = entity.path[0];
+    if (manhattan(entity, next) !== 1) {
+      entity.path = [];
+      entity.routeGoalKey = null;
+      entity.px = entity.x; entity.py = entity.y;
+      return false;
+    }
+    if (!isWalkable(next.x, next.y, { actor: entity })) {
+      entity.routeGoalKey = null;
+      entity.repathAt = 0;
+      return false;
+    }
     entity.from = { x: entity.x, y: entity.y };
     entity.to = entity.path.shift();
     entity.step = 0;
     setDirection(entity, entity.from, entity.to);
     entity.state = 'walk';
     entity.stateTime = 0;
+    return true;
   }
 
   function movementDuration(entity, isPlayer) {
@@ -22,10 +35,6 @@
   function updateMovement(entity, dt, isPlayer) {
     beginStep(entity);
     if (!entity.to) return false;
-    if (!isPlayer && game.player && entity.to.x === game.player.x && entity.to.y === game.player.y) {
-      entity.path = []; entity.to = null; entity.from = null; entity.step = 0;
-      return false;
-    }
     entity.step += dt / movementDuration(entity, isPlayer);
     const t = clamp(entity.step, 0, 1);
     const smooth = t * t * (3 - 2 * t);
@@ -34,39 +43,64 @@
     if (t >= 1) {
       entity.x = entity.to.x; entity.y = entity.to.y; entity.px = entity.x; entity.py = entity.y;
       entity.to = null; entity.from = null; entity.step = 0;
-      beginStep(entity);
     }
     return true;
   }
 
   function stopMovement(entity) {
     entity.path = [];
-    if (!entity.to) return;
-    if (entity.step >= .5) {
-      entity.x = entity.to.x; entity.y = entity.to.y;
-    } else if (entity.from) {
-      entity.x = entity.from.x; entity.y = entity.from.y;
-    }
+    entity.routeGoalKey = null;
+    if (entity.from) { entity.x = entity.from.x; entity.y = entity.from.y; }
     entity.px = entity.x; entity.py = entity.y; entity.to = null; entity.from = null; entity.step = 0;
+  }
+
+  function routeSignature(target, range) {
+    const goal = committedTile(target);
+    return `${target.id || 'point'}@${key(goal.x, goal.y)}:${range}`;
+  }
+
+  function tileCanAttack(start, target, range) {
+    return manhattan(start, target) <= range && lineOfSight(start, target);
+  }
+
+  function ensureChasePath(chaser, target, range) {
+    const goal = committedTile(target);
+    const start = committedTile(chaser);
+    const signature = routeSignature(target, range);
+    const atValidTile = tileCanAttack(start, goal, range);
+    if (chaser.routeGoalKey === signature && (chaser.to || chaser.path.length || atValidTile)) return true;
+    if (now() < chaser.repathAt && chaser.routeGoalKey === signature) return atValidTile || chaser.path.length > 0 || Boolean(chaser.to);
+    chaser.repathAt = now() + .12;
+    chaser.path = findPath(start, goal, range, { actor: chaser, requireLineOfSight: true });
+    chaser.routeTargetId = target.id || null;
+    chaser.routeGoalKey = signature;
+    return chaser.path.length > 0 || atValidTile;
   }
 
   function setPlayerPath(destination, range = 0, targetId = null) {
     if (game.player.dying) return;
     game.selectedMonsterId = targetId;
-    const path = findPath(game.player, destination, range, { ignoreMonsterId: targetId });
-    if (!path.length && manhattan(game.player, destination) > range) {
+    game.player.routeTargetId = targetId;
+    game.player.routeGoalKey = null;
+    const target = targetId ? game.monsters.find(monster => monster.id === targetId && !monster.dead) : null;
+    const start = committedTile(game.player);
+    const goal = target ? committedTile(target) : { x: destination.x, y: destination.y };
+    const path = target
+      ? (ensureChasePath(game.player, target, range), game.player.path)
+      : findPath(start, goal, range, { actor: game.player });
+    if (!path.length && !game.player.to && manhattan(start, goal) > range) {
       toast('Ce passage est bloqué');
       return;
     }
-    game.player.path = path;
+    if (!target) game.player.path = path;
     game.player.pendingAttack = null;
-    if (!path.length) game.player.state = 'idle';
+    if (!path.length && !game.player.to) game.player.state = 'idle';
     syncUi(true);
   }
 
   function selectedMonster() { return game.monsters.find(monster => monster.id === game.selectedMonsterId && !monster.dead) || null; }
 
-  function faceToward(entity, target) { setDirection(entity, entity, target); }
+  function faceToward(entity, target) { setDirection(entity, renderPosition(entity), renderPosition(target)); }
 
   function updatePlayer(dt) {
     const player = game.player;
@@ -97,6 +131,22 @@
       return;
     }
 
+    let target = selectedMonster();
+    if (target) {
+      const exactRange = weaponRange();
+      const canAttackFromHere = !player.to && distance(player, target) <= exactRange && lineOfSight(player, target);
+      if (canAttackFromHere) {
+        player.path = [];
+        player.routeGoalKey = null;
+      } else if (!ensureChasePath(player, target, Math.max(1, Math.floor(exactRange))) && !player.to) {
+        toast('La cible est inaccessible');
+        game.selectedMonsterId = null;
+        player.routeTargetId = null;
+        player.routeGoalKey = null;
+        target = null;
+      }
+    }
+
     const moving = updateMovement(player, dt, true);
     if (moving) {
       player.stateTime += dt;
@@ -105,21 +155,17 @@
 
     if (player.interaction === 'mentor' && distance(player, game.map.mentor) <= 1.45) {
       player.interaction = null;
-      if (game.state.player.className === 'Aventurier' && game.state.player.classLevel >= 20 && !game.state.classChoiceLocked) openModal(ui.classModal);
+      if (game.state.player.className === 'Aventurier' && game.state.player.classLevel >= 20 && !game.state.classChoiceLocked) openClassSelection();
     }
 
-    const target = selectedMonster();
+    target = selectedMonster();
     if (target) {
       const weapon = WEAPONS[game.state.player.weapon];
       const d = distance(player, target);
-      if (d > weapon.range || !lineOfSight(player, target)) {
-        if (!player.path.length && !player.to) {
-          player.path = findPath(player, target, Math.max(1, Math.floor(weapon.range)), { ignoreMonsterId: target.id });
-          if (!player.path.length) {
-            toast('La cible est inaccessible');
-            game.selectedMonsterId = null;
-          }
-        }
+      const range = weaponRange();
+      if (d > range || !lineOfSight(player, target)) {
+        ensureChasePath(player, target, Math.max(1, Math.floor(range)));
+        player.state = 'idle'; player.stateTime += dt;
       } else if (player.attackCooldown <= 0) {
         startPlayerAttack(target, weapon);
       } else {
@@ -132,6 +178,7 @@
   }
 
   function startPlayerAttack(target, weapon) {
+    if (game.player.to) return;
     if (game.player.mp < weapon.mana) {
       toast('Pas assez de PM');
       game.player.attackCooldown = .5;
@@ -151,10 +198,10 @@
     const monster = game.monsters.find(m => m.id === attack.targetId && !m.dead);
     if (!monster) return;
     const weapon = WEAPONS[attack.weapon];
-    if (distance(game.player, monster) > weapon.range + .55 || !lineOfSight(game.player, monster)) return;
+    if (distance(game.player, monster) > weaponRange(attack.weapon) + .55 || !lineOfSight(game.player, monster)) return;
     const mastery = effectiveMastery(weapon.mastery);
     const variance = randomInt(-1, 2);
-    const damage = Math.max(1, Math.floor(weapon.baseDamage + mastery * .72 + variance));
+    const damage = Math.max(1, Math.floor((weapon.baseDamage + mastery * .72 + variance) * classDamageMultiplier(weapon.mastery)));
     if (weapon.projectile) {
       game.projectiles.push({ type: weapon.projectile, x: game.player.px, y: game.player.py - .15, targetId: monster.id, damage, mastery: weapon.mastery, speed: weapon.projectile === 'magic' ? 9 : 7.5, life: 2 });
     } else {

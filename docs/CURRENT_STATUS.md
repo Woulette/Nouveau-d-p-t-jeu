@@ -1,118 +1,83 @@
 # État courant — Chroniques de Solenne
 
-Dernière mise à jour : **13 juillet 2026**.
+Dernière mise à jour : **14 juillet 2026**.
 
-Ce fichier contient l’état opérationnel à relire après `docs/NEXT_CHAT_HANDOFF.md`. Pour les faits temporels concernant les branches, la validation et Vercel, ce document est prioritaire.
+Ce document est la source prioritaire pour l’état temporel du dépôt, des validations et de Vercel. Les règles permanentes restent dans `NEXT_CHAT_HANDOFF.md` et `INFRASTRUCTURE_PROTECTION.md`.
 
-## Dépôt, branches et mise en production
+## Dépôt et branches
 
 Dépôt unique : `Woulette/Nouveau-d-p-t-jeu`.
 
-- `main` : branche de production ;
 - `develop` : branche de développement officielle ;
-- `foundation-backup-alpha3` : sauvegarde de l’ancienne alpha ;
-- `develop-consolidation-work` : point historique de la consolidation ;
-- `develop-before-consolidation-20260713` : sauvegarde intégrale de l’ancien `develop` avant sa remise au propre.
+- `main` : branche de production ;
+- `foundation-backup-alpha3` et `develop-before-consolidation-20260713` : sauvegardes historiques ;
+- `develop-consolidation-work` : branche historique, ce n’est plus la branche de travail courante.
 
-La PR **#2**, `develop` vers `main`, a été validée puis fusionnée le 13 juillet 2026.
+## Candidat source actuel
 
-- commit de fusion : `94fb2a9850aacd9073ea5f8786e90a5069bca074` ;
-- titre : `release: publier la fondation jouable de Chroniques de Solenne` ;
-- aucun dépôt GitHub supplémentaire n’a été créé.
+Version : `1.2.0-alpha.1`.
 
-## Version jouable publiée
+Le candidat de `develop` apporte :
 
-Version : `1.1.0-foundation.1`.
+- poursuite dynamique fondée sur les positions visuelles et engagées, avec recalcul de route ;
+- réservation des cases de départ et d’arrivée pour empêcher joueur et monstres de se superposer ;
+- respawn différé ou déplacé quand une case est occupée ;
+- rendu du monde à 75 % et HUD compact ;
+- bâton, fronde et orbe dans un rail vertical à gauche ;
+- Ours de Solenne et Sylvain épineux, plus forts et donnant davantage d’XP ;
+- passage normal Aventurier 19→20, plafond au rang 20, confirmation et choix permanent Épéiste/Archer/Mage ;
+- bonus de classe réels sans perte du niveau général, des maîtrises, de l’inventaire ou de l’équipement ;
+- URLs d’assets révisionnées pour éviter le mélange des caches 1.1 et 1.2.
 
-Le build reste entièrement reproductible à partir des sources du dépôt :
+## Validation locale du candidat
 
-1. génération déterministe des atlas PNG et de la carte ;
-2. audit des dimensions, du contenu et des SHA-256 ;
-3. assemblage des fragments réels du moteur JavaScript ;
-4. génération de `dist/` et de `dist/standalone.html` ;
-5. validation statique ;
-6. QA Chromium sur la release réellement servie par HTTP.
+La génération d’assets, l’audit, l’assemblage, la validation statique, la reproductibilité et la page autonome sont validés localement.
 
-Les vrais assets ont été conservés. Aucun sprite, décor, effet ou icône n’a été remplacé par un emoji, un rectangle ou un placeholder.
-
-## QA mobile et fonctionnelle validée
-
-Les quatre formats paysage sont validés sans erreur JavaScript, sans écran fatal et sans contrôle coupé :
+Le jeu a aussi été exécuté dans Chromium sur les formats paysage suivants :
 
 - 667 × 375 ;
+- 812 × 375 ;
 - 844 × 390 ;
 - 896 × 414 ;
 - 932 × 430.
 
-Le scénario fonctionnel 896 × 414 valide également :
+Les contrôles navigateur ont validé sans erreur console :
 
-- sélection du bâton, de la fronde et de l’orbe ;
-- sauvegarde locale puis restauration après rechargement ;
-- ouverture de l’inventaire et des statistiques ;
-- déplacement tactile case par case ;
-- ciblage réel d’un monstre ;
-- dégâts et gain de maîtrise avec les trois styles de combat ;
-- gain de maîtrise Défense après une attaque reçue ;
-- consommation d’une potion ;
-- mort puis réapparition au village avec PV et PM restaurés.
+- une poursuite simultanée où joueur et monstre changent plusieurs fois de case avant que le joueur frappe ;
+- l’absence de case réservée commune, de pas diagonal et de position fractionnaire au repos ;
+- les respawns et chargements sur une case libre ;
+- les trois styles, les profils des trois classes et la portée propre à l’Archer ;
+- la force et les récompenses supérieures de l’Ours et du Sylvain ;
+- le choix de classe permanent, sa sauvegarde et le verrouillage d’un second choix ;
+- des cibles tactiles d’au moins 44 px, un rail d’armes à gauche et aucun chevauchement majeur du HUD.
 
-Le workflow `Validate Chroniques de Solenne foundation` et ses artefacts conservent les rapports JSON et les captures mobiles.
+Le workflow GitHub `Validate Chroniques de Solenne` a confirmé le même scénario dans l’environnement Playwright officiel sur le PR `develop` → `main`. Sources, assets, build, page autonome, QA mobile et rapports sont tous passés.
 
-## Publication Vercel reproductible
+## Production historique et sortie `public/`
 
-Projet Vercel unique : `chroniques-de-solenne`.
+La dernière version de production historiquement validée reste `1.1.0-foundation.1`.
 
-Adresse de production :
+`public/` est une sortie générée et peut rester en 1.1 sur `develop`. Après fusion d’un candidat validé dans `main`, `.github/workflows/prepare-vercel-static.yml` reconstruit `dist/`, exécute toute la QA, remplace `public/`, puis commit uniquement la sortie validée. Ne jamais modifier `public/` à la main et ne jamais déployer directement un arbre où cette sortie est ancienne.
 
-```text
-https://chroniques-de-solenne.vercel.app
-```
+## État Vercel actuel
 
-Le projet a été reconnecté par l’utilisateur au dépôt officiel. La première tentative de production depuis le build Python Vercel a échoué. Pour supprimer cette dépendance au système de build distant sans modifier le jeu, une publication statique contrôlée a été mise en place :
+Cible unique attendue : `chroniques-de-solenne`, URL historique `https://chroniques-de-solenne.vercel.app`.
 
-1. le workflow `.github/workflows/prepare-vercel-static.yml` reconstruit le jeu depuis les sources ;
-2. il exécute les validations de source, d’assets, de reproductibilité et la QA mobile ;
-3. il copie seulement la sortie validée de `dist/` vers `public/` ;
-4. il commit cette sortie avec le compte `github-actions[bot]` ;
-5. `vercel.json` vérifie les fichiers essentiels et publie `public/` sans régénérer les assets sur Vercel.
+Lors de la vérification du 14 juillet 2026, le bot Vercel du PR GitHub confirme que l’intégration du dépôt cible bien le projet historique `chroniques-de-solenne`. Le connecteur Vercel de l’équipe **Bigot's projects** ne voit cependant toujours pas ce projet et l’accès direct par son identifiant exact renvoie « introuvable ». Le seul autre projet visible est hors périmètre et ne doit jamais être inspecté, modifié ou redéployé.
 
-Commits de publication importants :
+Le premier preview a aussi révélé que l’ancien `buildCommand` dépassait la limite Vercel de 256 caractères. La vérification a été déplacée dans `scripts/verify_vercel_release.js` : elle refuse toute sortie dont la version, la validation, la branche ou les fichiers essentiels ne correspondent pas à la release attendue.
 
-- `56b625c6ff588cf001252b40d5917f64928efe23` — ajout du workflow de préparation ;
-- `00214d7034e38b1274a5db1a3d087162dcfba687` — première release statique validée ;
-- `843d01317fbf60aa2ae1beef4953d7e8b0f62efe` — configuration Vercel vers `public/` ;
-- `c2a9a3c733cc971999d88bbfb69a0d07a8b3f5dc` — sortie statique régénérée depuis la configuration finale.
+Conséquences :
 
-Le statut Vercel du commit `c2a9a3c733cc971999d88bbfb69a0d07a8b3f5dc` est **SUCCESS**.
+- le candidat 1.2 n’est pas encore publié ni vérifié à distance ;
+- aucun nouveau projet Vercel ne doit être créé pour contourner ce blocage ;
+- la production ne doit être déclenchée qu’après restauration ou reconnexion non ambiguë du projet historique ;
+- une publication n’est terminée qu’après ouverture et QA de l’URL distante exacte.
 
-Le répertoire `public/` est une sortie générée. Les modifications de jeu doivent toujours être réalisées dans les sources, puis reconstruites et validées par le workflow ; il ne faut jamais modifier manuellement les PNG ou le moteur généré dans `public/`.
+## Prochaine action sûre
 
-## Protection formelle de Voidsector
-
-`voidsector-game` appartient à un autre jeu, déjà terminé ou proche de sa bêta. Il est totalement hors périmètre de Chroniques de Solenne.
-
-Dans le cadre de ce projet, il est formellement interdit de modifier, renommer, relier, transférer, redéployer ou réutiliser :
-
-- le dépôt GitHub de Voidsector ;
-- le projet Vercel `voidsector-game` ;
-- ses domaines, variables, intégrations, branches ou réglages.
-
-Voidsector n’a été touché à aucun moment pendant cette publication. La règle détaillée et permanente se trouve dans `docs/INFRASTRUCTURE_PROTECTION.md`.
-
-## Prochaine étape
-
-1. ouvrir la production sur téléphone en mode paysage ;
-2. vérifier déplacement, ciblage, bâton, fronde, orbe, inventaire, statistiques, potion, sauvegarde et réapparition ;
-3. enregistrer tout défaut concret dans GitHub avant la prochaine modification ;
-4. reprendre ensuite la phase 2 sur `develop` : élévation artistique et animations, sans régression fonctionnelle ou graphique.
-
-## Règle de reprise
-
-Toute nouvelle conversation doit d’abord lire intégralement :
-
-1. `docs/NEXT_CHAT_HANDOFF.md` ;
-2. `docs/CURRENT_STATUS.md` ;
-3. `docs/INFRASTRUCTURE_PROTECTION.md` ;
-4. `docs/VISUAL_STANDARD.md`.
-
-Le prochain travail de jeu part de `develop`. Il ne faut ni repartir des anciennes variantes `official/` ou `release/0.7`, ni dégrader la direction artistique, ni créer un autre dépôt ou projet Vercel.
+1. rendre le projet Vercel historique visible/reconnecté sans toucher à un autre projet ;
+2. vérifier son nom, son équipe, son identifiant, la branche et le domaine ;
+3. fusionner le PR validé dans `main` seulement après cette vérification ;
+4. attendre la génération automatique de `public/` ;
+5. vérifier le déploiement et rejouer la QA distante.
